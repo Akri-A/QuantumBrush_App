@@ -273,9 +273,9 @@ install_miniconda() {
     fi
 }
 
-# Setup Python environment
+# Setup Python environment with QuantumBrush dependencies
 setup_python_environment() {
-    print_step "Setting up Python environment..."
+    print_step "Setting up Python environment with QuantumBrush dependencies..."
     
     # Check if conda is available
     if ! find_conda; then
@@ -304,12 +304,21 @@ setup_python_environment() {
     print_step "Creating conda environment: quantumbrush"
     conda create -n quantumbrush python=3.11 -y
     
-    # Install packages
-    print_step "Installing Python packages..."
-    conda install -n quantumbrush -c conda-forge numpy pillow opencv matplotlib scipy -y
+    # Install packages with specific version requirements
+    print_step "Installing QuantumBrush dependencies..."
     
-    # Install additional packages with pip
-    conda run -n quantumbrush pip install opencv-python
+    # Install via conda first (better for scientific packages)
+    conda install -n quantumbrush -c conda-forge -y \
+        "numpy>=2.1.0" \
+        "matplotlib>=3.7.0" \
+        "scipy>=1.10.0"
+    
+    # Install via pip (for packages not available in conda or for specific versions)
+    conda run -n quantumbrush pip install \
+        "Pillow>=10.0.0" \
+        "qiskit>=1.0.0" \
+        "pytest>=7.0.0" \
+        "black>=23.0.0"
     
     # Get the Python path from the conda environment
     CONDA_PYTHON_PATH=$(conda run -n quantumbrush which python)
@@ -322,6 +331,15 @@ setup_python_environment() {
         echo "$CONDA_PYTHON_PATH" > "config/python_path.txt"
         
         print_success "Python path saved to QuantumBrush configuration"
+        
+        # Verify key packages are installed
+        print_step "Verifying package installation..."
+        if conda run -n quantumbrush python -c "import numpy, qiskit, matplotlib, scipy, PIL; print('✓ All packages verified')" 2>/dev/null; then
+            print_success "All packages verified successfully"
+        else
+            print_warning "Some packages may not have installed correctly"
+        fi
+        
         return 0
     else
         print_error "Failed to get Python path from conda environment"
@@ -361,11 +379,14 @@ main() {
     
     # Setup complete
     echo
-    print_success "Setup completed successfully!"
+    print_success "QuantumBrush setup completed successfully!"
     echo
     printf "${GREEN}Dependencies installed:${NORMAL}\n"
     printf "  • Java: $(java -version 2>&1 | head -n 1)\n"
     printf "  • Python: $(conda run -n quantumbrush python --version 2>/dev/null || echo 'Not available')\n"
+    printf "  • NumPy: $(conda run -n quantumbrush python -c 'import numpy; print(numpy.__version__)' 2>/dev/null || echo 'Not available')\n"
+    printf "  • Qiskit: $(conda run -n quantumbrush python -c 'import qiskit; print(qiskit.__version__)' 2>/dev/null || echo 'Not available')\n"
+    printf "  • Matplotlib: $(conda run -n quantumbrush python -c 'import matplotlib; print(matplotlib.__version__)' 2>/dev/null || echo 'Not available')\n"
     echo
     printf "${BLUE}To run QuantumBrush:${NORMAL}\n"
     printf "  • Double-click the JAR file\n"
