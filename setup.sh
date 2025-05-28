@@ -1,6 +1,6 @@
 #!/bin/bash
 # QuantumBrush Setup Script
-# This script sets up Java and Python dependencies for QuantumBrush
+# Installs Java and Python dependencies for QuantumBrush
 
 # Determine if terminal supports colors
 if [ -t 1 ]; then
@@ -44,15 +44,17 @@ print_error() {
     printf "${RED}[ERROR]${NORMAL} %s\n" "$1"
 }
 
-# Check Java version
-check_java_version() {
+# Check Java installation
+check_java() {
+    print_step "Checking for Java..."
+    
     if command -v java &> /dev/null; then
         JAVA_VERSION=$(java -version 2>&1 | head -n 1 | cut -d'"' -f2 | cut -d'.' -f1)
         if [ "$JAVA_VERSION" -ge 11 ] 2>/dev/null; then
-            print_success "Java $JAVA_VERSION is installed and meets requirements"
+            print_success "Java $JAVA_VERSION is installed"
             return 0
         else
-            print_warning "Java $JAVA_VERSION is installed but version 11+ is required"
+            print_warning "Java version is too old (need 11+)"
             return 1
         fi
     else
@@ -61,117 +63,78 @@ check_java_version() {
     fi
 }
 
-# Install Homebrew if not present
-install_homebrew() {
-    if ! command -v brew &> /dev/null; then
-        print_step "Installing Homebrew..."
-        /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
-        
-        # Add Homebrew to PATH for Apple Silicon Macs
-        if [ -f "/opt/homebrew/bin/brew" ]; then
-            export PATH="/opt/homebrew/bin:$PATH"
-            echo 'export PATH="/opt/homebrew/bin:$PATH"' >> ~/.zshrc
-            echo 'export PATH="/opt/homebrew/bin:$PATH"' >> ~/.bash_profile
-        fi
-        
-        print_success "Homebrew installed successfully"
-    else
-        print_success "Homebrew is already installed"
-    fi
-}
-
-# Install Java via Homebrew
+# Install Java
 install_java() {
-    print_step "Installing OpenJDK via Homebrew..."
+    print_step "Installing Java..."
     
-    # Install OpenJDK
-    if brew install openjdk; then
-        print_success "OpenJDK installed successfully"
-        
-        # Link it so it's available system-wide
-        print_step "Linking OpenJDK for system-wide use..."
-        sudo ln -sfn $(brew --prefix)/opt/openjdk/libexec/openjdk.jdk /Library/Java/JavaVirtualMachines/openjdk.jdk
-        
-        # Add to PATH
-        echo 'export PATH="$(brew --prefix)/opt/openjdk/bin:$PATH"' >> ~/.zshrc
-        echo 'export PATH="$(brew --prefix)/opt/openjdk/bin:$PATH"' >> ~/.bash_profile
-        export PATH="$(brew --prefix)/opt/openjdk/bin:$PATH"
-        
-        print_success "OpenJDK linked and added to PATH"
-    else
-        print_error "Failed to install OpenJDK"
-        return 1
-    fi
-    
-    # Verify installation
-    if check_java_version; then
-        return 0
-    else
-        print_error "Java installation verification failed"
-        return 1
-    fi
-}
-
-# Auto-install Java on macOS
-setup_java_macos() {
-    print_step "Setting up Java on macOS..."
-    
-    if check_java_version; then
-        return 0
-    fi
-    
-    # Install Homebrew if needed
-    install_homebrew
-    
-    # Install Java
-    install_java
-}
-
-# Auto-install Java on Linux
-setup_java_linux() {
-    print_step "Setting up Java on Linux..."
-    
-    if check_java_version; then
-        return 0
-    fi
-    
-    print_step "Installing OpenJDK..."
-    
-    if command -v apt &> /dev/null; then
-        # Ubuntu/Debian
-        sudo apt update && sudo apt install -y openjdk-17-jdk
-    elif command -v dnf &> /dev/null; then
-        # Fedora/RHEL
-        sudo dnf install -y java-17-openjdk-devel
-    elif command -v pacman &> /dev/null; then
-        # Arch Linux
-        sudo pacman -S --noconfirm jdk-openjdk
-    elif command -v zypper &> /dev/null; then
-        # openSUSE
-        sudo zypper install -y java-17-openjdk-devel
-    else
-        print_error "Could not detect package manager. Please install Java manually."
-        return 1
-    fi
+    OS="$(uname -s)"
+    case "${OS}" in
+        Darwin*)
+            # macOS - use Homebrew
+            if ! command -v brew &> /dev/null; then
+                print_step "Installing Homebrew first..."
+                /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+                
+                # Add Homebrew to PATH for Apple Silicon Macs
+                if [ -f "/opt/homebrew/bin/brew" ]; then
+                    export PATH="/opt/homebrew/bin:$PATH"
+                fi
+            fi
+            
+            print_step "Installing OpenJDK via Homebrew..."
+            brew install openjdk
+            
+            # Link it so macOS can find it
+            print_step "Linking OpenJDK for system use..."
+            sudo ln -sfn /opt/homebrew/opt/openjdk/libexec/openjdk.jdk /Library/Java/JavaVirtualMachines/openjdk.jdk 2>/dev/null || \
+            sudo ln -sfn /usr/local/opt/openjdk/libexec/openjdk.jdk /Library/Java/JavaVirtualMachines/openjdk.jdk 2>/dev/null
+            
+            # Add to PATH
+            if [ -f "/opt/homebrew/opt/openjdk/bin/java" ]; then
+                export PATH="/opt/homebrew/opt/openjdk/bin:$PATH"
+            elif [ -f "/usr/local/opt/openjdk/bin/java" ]; then
+                export PATH="/usr/local/opt/openjdk/bin:$PATH"
+            fi
+            ;;
+        Linux*)
+            # Linux - detect distribution
+            if command -v apt &> /dev/null; then
+                # Ubuntu/Debian
+                print_step "Installing OpenJDK via apt..."
+                sudo apt update && sudo apt install -y openjdk-17-jdk
+            elif command -v dnf &> /dev/null; then
+                # Fedora/RHEL
+                print_step "Installing OpenJDK via dnf..."
+                sudo dnf install -y java-17-openjdk-devel
+            elif command -v pacman &> /dev/null; then
+                # Arch Linux
+                print_step "Installing OpenJDK via pacman..."
+                sudo pacman -S --noconfirm jdk-openjdk
+            else
+                print_error "Could not detect package manager. Please install Java manually."
+                return 1
+            fi
+            ;;
+        *)
+            print_error "Unsupported operating system: $OS"
+            return 1
+            ;;
+    esac
     
     # Verify installation
-    if check_java_version; then
+    if check_java; then
         print_success "Java installed successfully"
         return 0
     else
-        print_error "Java installation verification failed"
+        print_error "Java installation failed"
         return 1
     fi
 }
 
-# Check for conda installation
-check_conda_installation() {
-    print_step "Checking for Conda installation..."
-    
+# Find conda installation
+find_conda() {
     # Check if conda command exists
     if command -v conda &> /dev/null; then
-        CONDA_PATH=$(which conda)
-        print_success "Found existing Conda installation: $CONDA_PATH"
         return 0
     fi
     
@@ -180,30 +143,67 @@ check_conda_installation() {
         "$HOME/miniconda3/bin/conda"
         "$HOME/anaconda3/bin/conda"
         "$HOME/miniforge3/bin/conda"
-        "/opt/miniconda3/bin/conda"
-        "/opt/anaconda3/bin/conda"
         "/opt/homebrew/Caskroom/miniconda/base/bin/conda"
         "/opt/homebrew/Caskroom/anaconda/base/bin/conda"
+        "/opt/miniconda3/bin/conda"
+        "/opt/anaconda3/bin/conda"
         "/usr/local/miniconda3/bin/conda"
         "/usr/local/anaconda3/bin/conda"
     )
     
     for path in "${COMMON_CONDA_PATHS[@]}"; do
         if [ -f "$path" ]; then
-            print_success "Found existing Conda installation: $path"
-            # Add to PATH temporarily
             export PATH="$(dirname "$path"):$PATH"
             return 0
         fi
     done
     
-    print_warning "No existing Conda installation found"
     return 1
+}
+
+# Initialize conda
+init_conda() {
+    # Find conda installation
+    if ! find_conda; then
+        return 1
+    fi
+    
+    # Find conda.sh script
+    CONDA_BASE=$(conda info --base 2>/dev/null)
+    if [ -n "$CONDA_BASE" ] && [ -f "$CONDA_BASE/etc/profile.d/conda.sh" ]; then
+        source "$CONDA_BASE/etc/profile.d/conda.sh"
+        return 0
+    fi
+    
+    # Try common locations for conda.sh
+    CONDA_SCRIPT_PATHS=(
+        "$HOME/miniconda3/etc/profile.d/conda.sh"
+        "$HOME/anaconda3/etc/profile.d/conda.sh"
+        "/opt/homebrew/Caskroom/miniconda/base/etc/profile.d/conda.sh"
+        "/opt/homebrew/Caskroom/anaconda/base/etc/profile.d/conda.sh"
+        "/opt/miniconda3/etc/profile.d/conda.sh"
+        "/opt/anaconda3/etc/profile.d/conda.sh"
+    )
+    
+    for script in "${CONDA_SCRIPT_PATHS[@]}"; do
+        if [ -f "$script" ]; then
+            source "$script"
+            return 0
+        fi
+    done
+    
+    print_warning "Could not find conda.sh script, but conda command is available"
+    return 0
 }
 
 # Install Miniconda
 install_miniconda() {
     print_step "Installing Miniconda..."
+    
+    # Create temporary directory
+    TEMP_DIR="$HOME/.quantumbrush_temp"
+    mkdir -p "$TEMP_DIR"
+    cd "$TEMP_DIR"
     
     # Detect system architecture
     OS=$(uname -s)
@@ -238,12 +238,7 @@ install_miniconda() {
     esac
     
     print_step "Downloading Miniconda for $OS ($ARCH)..."
-
-    # Create temporary directory for download
-    TEMP_DIR="$HOME/.quantumbrush_temp"
-    mkdir -p "$TEMP_DIR"
-    cd "$TEMP_DIR"
-
+    
     # Download Miniconda installer
     if command -v curl &> /dev/null; then
         curl -O "$MINICONDA_URL"
@@ -253,154 +248,116 @@ install_miniconda() {
         print_error "Neither curl nor wget found. Please install one of them."
         return 1
     fi
-
+    
     if [ ! -f "$INSTALLER_NAME" ]; then
         print_error "Failed to download Miniconda installer"
         return 1
     fi
-
+    
     print_step "Installing Miniconda..."
-
+    
     # Install Miniconda silently
     bash "$INSTALLER_NAME" -b -p "$HOME/miniconda3"
-
-    # Clean up installer and temp directory
+    
+    # Clean up
     cd - > /dev/null
     rm -rf "$TEMP_DIR"
     
     # Initialize conda
-    print_step "Initializing Conda..."
-    
-    # Source conda
-    source "$HOME/miniconda3/etc/profile.d/conda.sh"
-    
-    # Initialize for current shells
-    "$HOME/miniconda3/bin/conda" init bash 2>/dev/null || true
-    "$HOME/miniconda3/bin/conda" init zsh 2>/dev/null || true
-    
-    print_success "Miniconda installed and initialized successfully"
-    return 0
+    if init_conda; then
+        print_success "Miniconda installed and initialized successfully"
+        return 0
+    else
+        print_error "Miniconda installation failed"
+        return 1
+    fi
 }
 
-# Setup conda environment
-setup_conda_environment() {
-    print_step "Setting up Python environment for QuantumBrush..."
+# Setup Python environment
+setup_python_environment() {
+    print_step "Setting up Python environment..."
     
-    # Find conda installation
-    CONDA_BASE_PATH=""
-    
-    if [ -f "$HOME/miniconda3/bin/conda" ]; then
-        CONDA_BASE_PATH="$HOME/miniconda3"
-    elif [ -f "$HOME/anaconda3/bin/conda" ]; then
-        CONDA_BASE_PATH="$HOME/anaconda3"
-    elif command -v conda &> /dev/null; then
-        CONDA_BASE_PATH=$(conda info --base 2>/dev/null)
+    # Check if conda is available
+    if ! find_conda; then
+        print_step "Conda not found, installing Miniconda..."
+        if ! install_miniconda; then
+            print_error "Failed to install Miniconda"
+            return 1
+        fi
     else
-        print_error "Conda not found after installation"
+        print_success "Conda is already installed"
+    fi
+    
+    # Initialize conda
+    if ! init_conda; then
+        print_error "Failed to initialize conda"
         return 1
     fi
     
-    print_step "Using conda at: $CONDA_BASE_PATH"
-    
-    # Source conda properly
-    if [ -f "$CONDA_BASE_PATH/etc/profile.d/conda.sh" ]; then
-        source "$CONDA_BASE_PATH/etc/profile.d/conda.sh"
-        print_success "Conda environment sourced"
-    else
-        print_error "Conda profile script not found"
-        return 1
+    # Check if environment already exists
+    if conda env list | grep -q "^quantumbrush "; then
+        print_warning "Environment 'quantumbrush' already exists. Removing and recreating..."
+        conda env remove -n quantumbrush -y
     fi
     
-    # Create or update environment
-    CONDA_ENV_NAME="quantumbrush"
+    # Create new environment
+    print_step "Creating conda environment: quantumbrush"
+    conda create -n quantumbrush python=3.11 -y
     
-    if conda env list | grep -q "^$CONDA_ENV_NAME "; then
-        print_warning "Environment '$CONDA_ENV_NAME' already exists. Updating..."
-        conda env update -n "$CONDA_ENV_NAME" --file - << EOF
-name: $CONDA_ENV_NAME
-channels:
-  - conda-forge
-  - defaults
-dependencies:
-  - python>=3.11
-  - numpy>=2.1.0
-  - pillow>=10.0.0
-  - matplotlib>=3.7.0
-  - scipy>=1.10.0
-  - qiskit>=1.0.0
-  - pytest>=7.0.0
-  - black>=23.0.0
-  - pip
-EOF
-    else
-        print_step "Creating new conda environment: $CONDA_ENV_NAME"
-        conda create -n "$CONDA_ENV_NAME" python=3.11 -y
-        conda install -n "$CONDA_ENV_NAME" -c conda-forge -y \
-            numpy \
-            pillow \
-            matplotlib \
-            scipy \
-            qiskit \
-            pytest \
-            black
-    fi
+    # Install packages
+    print_step "Installing Python packages..."
+    conda install -n quantumbrush -c conda-forge numpy pillow opencv matplotlib scipy -y
+    
+    # Install additional packages with pip
+    conda run -n quantumbrush pip install opencv-python
     
     # Get the Python path from the conda environment
-    CONDA_PYTHON_PATH=$(conda run -n "$CONDA_ENV_NAME" which python)
+    CONDA_PYTHON_PATH=$(conda run -n quantumbrush which python)
     
-    print_success "Python environment created: $CONDA_PYTHON_PATH"
-    
-    # Save Python path to QuantumBrush config
-    mkdir -p "config"
-    echo "$CONDA_PYTHON_PATH" > "config/python_path.txt"
-    
-    print_success "Python path saved to QuantumBrush configuration"
+    if [ -n "$CONDA_PYTHON_PATH" ]; then
+        print_success "Python environment created: $CONDA_PYTHON_PATH"
+        
+        # Save Python path to QuantumBrush config
+        mkdir -p "config"
+        echo "$CONDA_PYTHON_PATH" > "config/python_path.txt"
+        
+        print_success "Python path saved to QuantumBrush configuration"
+        return 0
+    else
+        print_error "Failed to get Python path from conda environment"
+        return 1
+    fi
 }
 
-# Main setup function
+# Main function
 main() {
     printf "\n"
     printf "╔══════════════════════════════════════════════════════════════╗\n"
-    printf "║                Quantum Brush Setup Script                    ║\n"
+    printf "║                  QuantumBrush Setup                         ║\n"
     printf "║                                                              ║\n"
     printf "╚══════════════════════════════════════════════════════════════╝\n"
     printf "\n"
     
-    print_step "Setting up dependencies for QuantumBrush..."
-    
-    # Detect OS and setup Java
-    OS="$(uname -s)"
-    case "${OS}" in
-        Darwin*)
-            setup_java_macos
-            ;;
-        Linux*)
-            setup_java_linux
-            ;;
-        *)
-            print_error "Unsupported operating system: $OS"
-            print_warning "Please install Java 11+ manually"
-            ;;
-    esac
-    
-    # Setup Python environment
-    if ! check_conda_installation; then
-        read -p "Miniconda is required for Python effects. Install it? (Y/n): " -n 1 -r
+    # Check and install Java
+    if ! check_java; then
+        read -p "Do you want to install Java automatically? (Y/n): " -n 1 -r
         echo
         
         if [[ ! $REPLY =~ ^[Nn]$ ]]; then
-            if ! install_miniconda; then
-                print_error "Failed to install Miniconda"
+            if ! install_java; then
+                print_error "Java installation failed. Please install Java manually."
                 exit 1
             fi
         else
-            print_warning "Skipping Miniconda installation. You'll need to configure Python manually."
-            exit 0
+            print_warning "Java installation skipped. QuantumBrush requires Java 11+ to run."
         fi
     fi
     
-    # Set up conda environment
-    setup_conda_environment
+    # Setup Python environment
+    if ! setup_python_environment; then
+        print_error "Python environment setup failed."
+        exit 1
+    fi
     
     # Setup complete
     echo
@@ -408,10 +365,11 @@ main() {
     echo
     printf "${GREEN}Dependencies installed:${NORMAL}\n"
     printf "  • Java: $(java -version 2>&1 | head -n 1)\n"
-    printf "  • Python: $(cat config/python_path.txt 2>/dev/null || echo 'Not configured')\n"
+    printf "  • Python: $(conda run -n quantumbrush python --version 2>/dev/null || echo 'Not available')\n"
     echo
-    printf "${BLUE}You can now run QuantumBrush:${NORMAL}\n"
-    printf "  java -jar QuantumBrush.jar\n"
+    printf "${BLUE}To run QuantumBrush:${NORMAL}\n"
+    printf "  • Double-click the JAR file\n"
+    printf "  • Or from terminal: java -jar QuantumBrush.jar\n"
     echo
 }
 
