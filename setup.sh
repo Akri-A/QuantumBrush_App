@@ -342,7 +342,7 @@ EOF
             scipy \
             qiskit \
             pytest \
-            black \
+            black
     fi
     
     # Get the Python path from the conda environment
