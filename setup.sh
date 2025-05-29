@@ -47,7 +47,7 @@ print_error() {
 # Check Java installation
 check_java() {
     print_step "Checking for Java..."
-    
+
     if command -v java &> /dev/null; then
         JAVA_VERSION=$(java -version 2>&1 | head -n 1 | cut -d'"' -f2 | cut -d'.' -f1)
         if [ "$JAVA_VERSION" -ge 11 ] 2>/dev/null; then
@@ -66,7 +66,7 @@ check_java() {
 # Install Java
 install_java() {
     print_step "Installing Java..."
-    
+
     OS="$(uname -s)"
     case "${OS}" in
         Darwin*)
@@ -74,21 +74,21 @@ install_java() {
             if ! command -v brew &> /dev/null; then
                 print_step "Installing Homebrew first..."
                 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
-                
+
                 # Add Homebrew to PATH for Apple Silicon Macs
                 if [ -f "/opt/homebrew/bin/brew" ]; then
                     export PATH="/opt/homebrew/bin:$PATH"
                 fi
             fi
-            
+
             print_step "Installing OpenJDK via Homebrew..."
             brew install openjdk
-            
+
             # Link it so macOS can find it
             print_step "Linking OpenJDK for system use..."
             sudo ln -sfn /opt/homebrew/opt/openjdk/libexec/openjdk.jdk /Library/Java/JavaVirtualMachines/openjdk.jdk 2>/dev/null || \
             sudo ln -sfn /usr/local/opt/openjdk/libexec/openjdk.jdk /Library/Java/JavaVirtualMachines/openjdk.jdk 2>/dev/null
-            
+
             # Add to PATH
             if [ -f "/opt/homebrew/opt/openjdk/bin/java" ]; then
                 export PATH="/opt/homebrew/opt/openjdk/bin:$PATH"
@@ -120,7 +120,7 @@ install_java() {
             return 1
             ;;
     esac
-    
+
     # Verify installation
     if check_java; then
         print_success "Java installed successfully"
@@ -137,7 +137,7 @@ find_conda() {
     if command -v conda &> /dev/null; then
         return 0
     fi
-    
+
     # Check common installation paths
     COMMON_CONDA_PATHS=(
         "$HOME/miniconda3/bin/conda"
@@ -150,14 +150,14 @@ find_conda() {
         "/usr/local/miniconda3/bin/conda"
         "/usr/local/anaconda3/bin/conda"
     )
-    
+
     for path in "${COMMON_CONDA_PATHS[@]}"; do
         if [ -f "$path" ]; then
             export PATH="$(dirname "$path"):$PATH"
             return 0
         fi
     done
-    
+
     return 1
 }
 
@@ -167,14 +167,14 @@ init_conda() {
     if ! find_conda; then
         return 1
     fi
-    
+
     # Find conda.sh script
     CONDA_BASE=$(conda info --base 2>/dev/null)
     if [ -n "$CONDA_BASE" ] && [ -f "$CONDA_BASE/etc/profile.d/conda.sh" ]; then
         source "$CONDA_BASE/etc/profile.d/conda.sh"
         return 0
     fi
-    
+
     # Try common locations for conda.sh
     CONDA_SCRIPT_PATHS=(
         "$HOME/miniconda3/etc/profile.d/conda.sh"
@@ -184,14 +184,14 @@ init_conda() {
         "/opt/miniconda3/etc/profile.d/conda.sh"
         "/opt/anaconda3/etc/profile.d/conda.sh"
     )
-    
+
     for script in "${CONDA_SCRIPT_PATHS[@]}"; do
         if [ -f "$script" ]; then
             source "$script"
             return 0
         fi
     done
-    
+
     print_warning "Could not find conda.sh script, but conda command is available"
     return 0
 }
@@ -199,16 +199,16 @@ init_conda() {
 # Install Miniconda
 install_miniconda() {
     print_step "Installing Miniconda..."
-    
+
     # Create temporary directory
     TEMP_DIR="$HOME/.quantumbrush_temp"
     mkdir -p "$TEMP_DIR"
     cd "$TEMP_DIR"
-    
+
     # Detect system architecture
     OS=$(uname -s)
     ARCH=$(uname -m)
-    
+
     case "$OS" in
         "Darwin")
             if [ "$ARCH" = "arm64" ]; then
@@ -236,9 +236,9 @@ install_miniconda() {
             return 1
             ;;
     esac
-    
+
     print_step "Downloading Miniconda for $OS ($ARCH)..."
-    
+
     # Download Miniconda installer
     if command -v curl &> /dev/null; then
         curl -O "$MINICONDA_URL"
@@ -248,21 +248,21 @@ install_miniconda() {
         print_error "Neither curl nor wget found. Please install one of them."
         return 1
     fi
-    
+
     if [ ! -f "$INSTALLER_NAME" ]; then
         print_error "Failed to download Miniconda installer"
         return 1
     fi
-    
+
     print_step "Installing Miniconda..."
-    
+
     # Install Miniconda silently
     bash "$INSTALLER_NAME" -b -p "$HOME/miniconda3"
-    
+
     # Clean up
     cd - > /dev/null
     rm -rf "$TEMP_DIR"
-    
+
     # Initialize conda
     if init_conda; then
         print_success "Miniconda installed and initialized successfully"
@@ -276,7 +276,7 @@ install_miniconda() {
 # Setup Python environment with QuantumBrush dependencies
 setup_python_environment() {
     print_step "Setting up Python environment with QuantumBrush dependencies..."
-    
+
     # Check if conda is available
     if ! find_conda; then
         print_step "Conda not found, installing Miniconda..."
@@ -287,59 +287,62 @@ setup_python_environment() {
     else
         print_success "Conda is already installed"
     fi
-    
+
     # Initialize conda
     if ! init_conda; then
         print_error "Failed to initialize conda"
         return 1
     fi
-    
+
     # Check if environment already exists
     if conda env list | grep -q "^quantumbrush "; then
         print_warning "Environment 'quantumbrush' already exists. Removing and recreating..."
         conda env remove -n quantumbrush -y
     fi
-    
+
     # Create new environment
     print_step "Creating conda environment: quantumbrush"
     conda create -n quantumbrush python=3.11 -y
-    
+
     # Install packages with specific version requirements
     print_step "Installing QuantumBrush dependencies..."
-    
+
     # Install via conda first (better for scientific packages)
     conda install -n quantumbrush -c conda-forge -y \
         "numpy>=2.1.0" \
         "matplotlib>=3.7.0" \
         "scipy>=1.10.0"
-    
+
+
     # Install via pip (for packages not available in conda or for specific versions)
     conda run -n quantumbrush pip install \
         "Pillow>=10.0.0" \
         "qiskit>=1.0.0" \
+        "qiskit-ibm-runtime>=0.20.0" \
         "pytest>=7.0.0" \
         "black>=23.0.0"
-    
+
+
     # Get the Python path from the conda environment
     CONDA_PYTHON_PATH=$(conda run -n quantumbrush which python)
-    
+
     if [ -n "$CONDA_PYTHON_PATH" ]; then
         print_success "Python environment created: $CONDA_PYTHON_PATH"
-        
+
         # Save Python path to QuantumBrush config
         mkdir -p "config"
         echo "$CONDA_PYTHON_PATH" > "config/python_path.txt"
-        
+
         print_success "Python path saved to QuantumBrush configuration"
-        
+
         # Verify key packages are installed
         print_step "Verifying package installation..."
-        if conda run -n quantumbrush python -c "import numpy, qiskit, matplotlib, scipy, PIL; print('✓ All packages verified')" 2>/dev/null; then
+        if conda run -n quantumbrush python -c "import numpy, qiskit,qiskit_ibm_runtime, matplotlib, scipy, PIL; print('✓ All packages verified')" 2>/dev/null; then
             print_success "All packages verified successfully"
         else
             print_warning "Some packages may not have installed correctly"
         fi
-        
+
         return 0
     else
         print_error "Failed to get Python path from conda environment"
@@ -355,12 +358,12 @@ main() {
     printf "║                                                              ║\n"
     printf "╚══════════════════════════════════════════════════════════════╝\n"
     printf "\n"
-    
+
     # Check and install Java
     if ! check_java; then
         read -p "Do you want to install Java automatically? (Y/n): " -n 1 -r
         echo
-        
+
         if [[ ! $REPLY =~ ^[Nn]$ ]]; then
             if ! install_java; then
                 print_error "Java installation failed. Please install Java manually."
@@ -370,13 +373,13 @@ main() {
             print_warning "Java installation skipped. QuantumBrush requires Java 11+ to run."
         fi
     fi
-    
+
     # Setup Python environment
     if ! setup_python_environment; then
         print_error "Python environment setup failed."
         exit 1
     fi
-    
+
     # Setup complete
     echo
     print_success "QuantumBrush setup completed successfully!"
@@ -386,6 +389,7 @@ main() {
     printf "  • Python: $(conda run -n quantumbrush python --version 2>/dev/null || echo 'Not available')\n"
     printf "  • NumPy: $(conda run -n quantumbrush python -c 'import numpy; print(numpy.__version__)' 2>/dev/null || echo 'Not available')\n"
     printf "  • Qiskit: $(conda run -n quantumbrush python -c 'import qiskit; print(qiskit.__version__)' 2>/dev/null || echo 'Not available')\n"
+    printf "  • Qiskit_ibm_runtime: $(conda run -n quantumbrush python -c 'import qiskit_ibm_runtime; print(qiskit_ibm_runtime.__version__)' 2>/dev/null || echo 'Not available')\n"
     printf "  • Matplotlib: $(conda run -n quantumbrush python -c 'import matplotlib; print(matplotlib.__version__)' 2>/dev/null || echo 'Not available')\n"
     echo
     printf "${BLUE}To run QuantumBrush:${NORMAL}\n"
