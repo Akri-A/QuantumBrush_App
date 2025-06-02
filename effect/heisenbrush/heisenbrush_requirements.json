@@ -12,7 +12,9 @@
     },
     "user_input": {
         "Radius": "int",
-        "Strength": "float"
+        "Strength": "float",
+        "Saturation": "float",
+        "Value": "float"
     },
     "stroke_input": {
         "image_rgba": "array",
