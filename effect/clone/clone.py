@@ -3,6 +3,9 @@ import numpy as np
 from qiskit import QuantumCircuit
 from qiskit.quantum_info import Pauli, SparsePauliOp, Statevector,partial_trace
 from qiskit.circuit.library import RXGate, RZGate,XGate,ZGate,IGate,StatePreparation
+from itertools import product
+from matplotlib.path import Path
+
 
 def svd(matrix=None,U=None,S=None,Vt=None):
     if U is not None:
@@ -16,42 +19,26 @@ def svd(matrix=None,U=None,S=None,Vt=None):
     return U[:, sorted_indices], S[sorted_indices], Vt[sorted_indices, :]
 
 
-def square_region(click, radius):
-    horizontal = np.arange(click[1] - radius, click[1] + radius + 1,dtype=int)
-    vertical = np.arange(click[0] - radius, click[0] + radius + 1,dtype=int)
-    mesh_x, mesh_y = np.meshgrid(horizontal, vertical)
-    points = np.stack((mesh_y.flatten(), mesh_x.flatten()), axis=-1)
-    return points
+def points_within_lasso(points,border = None):
+    min_x = np.min(points[:,1])
+    max_x = np.max(points[:,1])+1
+    min_y = np.min(points[:,0])
+    max_y = np.max(points[:,0])+1
 
-def points_within_radius(points, radius, border = None):
-    """
-    Given a set of points and a radius, return all points within the radius.
-    Args:
-        points (np.ndarray): Array of shape (N, 2) where N is the number of points.
-        radius (int): The radius to search within.
-    Returns:
-        np.ndarray: Array of points within the radius.
-    """
-    if len(points.shape) == 1:
-        points = np.array([points])
+    grid = list(product(np.arange(min_y,max_y), np.arange(min_x,max_x)))
+    # Create path from polygon
+    path = Path(points)
 
-    assert radius > 0, "Radius must be positive"
-    assert isinstance(points, np.ndarray), "Points must be a numpy array"
+    # Test which points are inside the path
+    mask = path.contains_points(grid)
 
-    # Precompute offsets within the radius
-    y, x = np.ogrid[-radius:radius+1, -radius:radius+1]
-    mask = x**2 + y**2 <= radius**2
-    offsets = np.stack(np.nonzero(mask), axis=-1) - radius
-    # Broadcast add offsets to all points
-    all_points = points[:, None, :] + offsets[None, :, :]
-    # Reshape and get unique points
-    result = np.unique(all_points.reshape(-1, 2), axis=0)
+    # Get the pixel coordinates that are inside
+    result = np.array(grid)[mask]
 
     if border is not None:
         result = np.clip(result, [0, 0], [border[0] - 1, border[1] - 1])
 
     return result
-
 
 
 def prep(s0,s1=None): #s0 is the final state and s1 is the initial state
@@ -123,10 +110,19 @@ def run(params):
     # Extract the copy and past points
     clicks = params["stroke_input"]["clicks"]
     assert len(clicks) == 2, "The number of clicks must 2, i.e. copy and paste"
-    print(f"Clicks: {clicks}")
+
+    offset = clicks[1]-clicks[0]
+
+    # Extract the lasso path
+    path = params["stroke_input"]["path"]
+    
+    # Remove any leftover points
+    while np.all(path[-1] != clicks[-1]):
+        path = path[:-1]
+    path = path[:-1] #Remove the last click
 
     # Create the region around those points
-    copy_region = points_within_radius(clicks[0], params["user_input"]["Radius"], border = (height, width))
+    copy_region = points_within_lasso(path, border = (height, width))
 
     # Get the RGB values of the copy region
     copy_selection = image[copy_region[:, 0], copy_region[:, 1],:3]
@@ -159,12 +155,10 @@ def run(params):
     copy_selection = svd(U=U, S=copy_coord, Vt=V)
     paste_selection = svd(U=U, S=paste_coord, Vt=V)
 
-    #copy_selection = np.clip(copy_selection,0,1)
-    #paste_selection = np.clip(paste_selection,0,1)
-
     image[copy_region[:, 0], copy_region[:, 1],:3] = (copy_selection * 255).astype(np.uint8)
 
-    paste_region = points_within_radius(clicks[1], params["user_input"]["Radius"], border = (height, width))
+
+    paste_region = points_within_lasso(path + offset, border = (height, width))
     image[paste_region[:, 0], paste_region[:, 1],:3] = (paste_selection * 255).astype(np.uint8)
 
     return image

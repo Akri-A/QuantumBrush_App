@@ -9,12 +9,12 @@
         "qiskit": ""
     },
     "user_input": {
-        "Radius": "int",
         "Strength": "float"
     },
     "stroke_input": {
         "image_rgba": "array",
-        "clicks": "array"
+        "clicks": "array",
+        "path": "array"
     },
     "flags": {
     }
