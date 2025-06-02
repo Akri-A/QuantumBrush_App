@@ -1,8 +1,17 @@
 #Add any dependencies but don't forget to list them in the requirements if they need to be pip installed
 import numpy as np
-from qiskit import QuantumCircuit
+from qiskit import QuantumCircuit, generate_preset_pass_manager
 from qiskit.quantum_info import Pauli, SparsePauliOp, Statevector,partial_trace
 from qiskit.circuit.library import RXGate, RZGate,XGate,ZGate,IGate,StatePreparation
+from qiskit.primitives import BackendSamplerV2
+from iqm import qiskit_iqm
+from iqm.qiskit_iqm import IQMProvider
+
+iqm_server_url = "https://cocos.resonance.meetiqm.com/garnet:mock"  # Replace this with the correct URL
+provider = IQMProvider(iqm_server_url)
+backend = provider.get_backend('garnet')
+sampler = BackendSamplerV2(backend, options={"default_shots": 1000})
+
 
 def svd(matrix=None,U=None,S=None,Vt=None):
     if U is not None:
