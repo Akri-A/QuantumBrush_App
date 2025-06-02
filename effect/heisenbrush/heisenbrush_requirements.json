@@ -1,7 +1,7 @@
 {
     "name": "Heisenberg Brush",
     "id": "heisenbrush",
-    "author": "Joao",
+    "author": "Arianna",
     "version": "1.0.0",
     "description": "This applies quantum-inspired color effects using a Heisenberg model simulation. The brush creates entangled color patterns where each stroke segment affects others through quantum simulation, producing unique color variations based on path dynamics and quantum hardware simulation.",
     "dependencies": {
@@ -11,10 +11,10 @@
         "qiskit_ibm_runtime": ">=0.20.0"
     },
     "user_input": {
-        "Radius": "int",
-        "Strength": "float",
-        "Saturation": "float",
-        "Value": "float"
+        "Radius": 4,
+        "Strength": 0.5,
+        "Saturation": 0.5,
+        "Value": 0.5
     },
     "stroke_input": {
         "image_rgba": "array",
