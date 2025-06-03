@@ -1,16 +1,12 @@
-#Add any dependencies but don't forget to list them in the requirements if they need to be pip installed
 import numpy as np
 from qiskit import QuantumCircuit, generate_preset_pass_manager
 from qiskit.quantum_info import Pauli, SparsePauliOp, Statevector,partial_trace
 from qiskit.circuit.library import RXGate, RZGate,XGate,ZGate,IGate,StatePreparation
-from qiskit_ibm_runtime.fake_provider import FakeManilaV2,FakeBrisbane
 import importlib.util
 
 spec = importlib.util.spec_from_file_location("utils", "effect/utils.py")
 utils = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(utils)
-
-
 
 def prep(s0,s1=None): #s0 is the final state and s1 is the initial state
     if s1 is None:
@@ -73,10 +69,19 @@ def run(params):
     # Extract the copy and past points
     clicks = params["stroke_input"]["clicks"]
     assert len(clicks) == 2, "The number of clicks must 2, i.e. copy and paste"
-    print(f"Clicks: {clicks}")
+
+    offset = clicks[1]-clicks[0]
+
+    # Extract the lasso path
+    path = params["stroke_input"]["path"]
+    
+    # Remove any leftover points
+    while np.all(path[-1] != clicks[-1]):
+        path = path[:-1]
+    path = path[:-1] #Remove the last click
 
     # Create the region around those points
-    copy_region = utils.points_within_radius(clicks[0], params["user_input"]["Radius"], border = (height, width))
+    copy_region = utils.points_within_lasso(path, border = (height, width))
 
     # Get the RGB values of the copy region
     copy_selection = image[copy_region[:, 0], copy_region[:, 1],:3]
@@ -109,13 +114,14 @@ def run(params):
         paste_coord = paste_r * np.exp( np.array(paste_coord) * r / paste_r   ) + (1-paste_r) * np.mean(S)
     
     print(f"final {copy_coord} {paste_coord}")
+    
     copy_selection = utils.svd(U=U, S=copy_coord, Vt=V)
     paste_selection = utils.svd(U=U, S=paste_coord, Vt=V)
 
     image[copy_region[:, 0], copy_region[:, 1],:3] = (copy_selection * 255).astype(np.uint8)
 
-    paste_region = utils.points_within_radius(clicks[1], params["user_input"]["Radius"], border = (height, width))
 
+    paste_region = utils.points_within_lasso(path + offset, border = (height, width))
     image[paste_region[:, 0], paste_region[:, 1],:3] = (paste_selection * 255).astype(np.uint8)
 
     return image

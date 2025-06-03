@@ -9,7 +9,6 @@
         "qiskit": ""
     },
     "user_input": {
-        "Radius": "int",
         "Strength": "float"
     },
     "stroke_input": {

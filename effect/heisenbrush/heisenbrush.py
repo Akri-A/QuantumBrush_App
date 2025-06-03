@@ -153,7 +153,7 @@ def time_evolution_Heisenberg(n_qubits: int, J_list: list, hz_list: list, hx_lis
 
     return circ_dt
 
-def run_heisenberg_hardware(dt_list):
+def run_heisenberg_hardware(dt_list,saturation, value, radius):
     """
     Run Heisenberg model simulation on quantum hardware simulator.
 
@@ -168,12 +168,10 @@ def run_heisenberg_hardware(dt_list):
         estimator = Estimator(backend)
 
         nsteps = len(dt_list)
-        #Hardcoding all the parameters for now
-        n_qubits = 4
-        # J_list = [1 for _ in range(n_qubits-1)]
-        # hz_list = [1 for _ in range(n_qubits)]
-        # hx_list = [1 for _ in range(n_qubits)]
 
+        n_qubits = 2 if radius < 2 else min(radius, 20) #XXX: fixed to 20 qubits max
+
+        #TODO: Hardcoding all the parameters for now
         J_list =np.random.uniform(-1, 1, n_qubits-1 )   # For Z_n Z_{n+1}
         hz_list =np.random.uniform(-1, 1, n_qubits)    # For Z_n
         hx_list =np.random.uniform(-1, 1, n_qubits)    # For X_n
@@ -209,13 +207,6 @@ def run_heisenberg_hardware(dt_list):
             values.append(float(pub_result.data.evs))
 
         values=np.array(values)
-        # print('values',values)
-
-        # values=np.abs(np.array(values))/sum(np.abs(np.array(values)))
-
-        # color_results=numbers_to_hsl(values)
-        # print('values after',values)
-        # print('hsl values',numbers_to_hsl(values))
 
         # Normalize to [0, 1]
         vmin, vmax = values.min(), values.max()
@@ -223,11 +214,10 @@ def run_heisenberg_hardware(dt_list):
 
         # Map normalized values to HSV-based RGB
         color_results = [
-            tuple(int(round(c * 255)) for c in colorsys.hsv_to_rgb(float(h), 1.0, 1.0))
+            tuple(int(round(c * 255)) for c in colorsys.hsv_to_rgb(float(h), saturation, value))
             for h in normalized
         ]
 
-        # print('color',color_results)
 
         return color_results
 
@@ -236,11 +226,6 @@ def run_heisenberg_hardware(dt_list):
 
         return
 
-        # # Fallback to classical simulation
-        # np.random.seed(42)  # For reproducible results
-        # values = np.random.random(len(dt_list))
-        # values = values / np.sum(values)
-        # return numbers_to_hsl(values)
 
 def interpolate_pixels(points):
     """
@@ -275,7 +260,7 @@ def interpolate_pixels(points):
 
     return interpolated
 
-# The main function using only Heisenberg model
+# The main function using  Heisenberg model
 def run(params):
     """
     Executes the Heisenberg quantum effect pipeline based on the provided parameters.
@@ -301,7 +286,13 @@ def run(params):
     assert radius > 0, "Radius must be greater than 0"
 
     strength = params["user_input"]["Strength"]
-    assert strength >= 0 and strength <= 1, "Strength must be between 0 and 1"
+    assert strength > 0, "Strength must be greater than 0"
+
+    saturation = params["user_input"]["Saturation"]
+    assert saturation >= 0 and saturation <= 1, "Saturation must be between 0 and 1"
+
+    value = params["user_input"]["Value"]
+    assert value >= 0 and value <= 1, "Value must be between 0 and 1"
 
     # Calculate distances between consecutive points in the path
     distances = []
@@ -314,19 +305,14 @@ def run(params):
     if len(distances) == 0:
         distances = [0.1]  # Default distance if path is too short
 
-    # Normalize distances and apply strength
+    # Normalize distances
     max_dist = max(distances) if distances else 1.0
-    normalized_distances = [strength * d / max_dist for d in distances]
+    normalized_distances = [ strength * d / max_dist for d in distances]
 
     normalized_distances=normalized_distances[:30] if len(normalized_distances) > 30 else normalized_distances #TODO: notice the fixed distances for time evolution
 
-
-
-    # print(f"Path length: {len(path)}, Distances: {len(distances)}")
-    # print(f"Normalized distances: {normalized_distances[:5]}...")  # Show first 5
-
     # Run Heisenberg simulation to get colors
-    heisenberg_colors = run_heisenberg_hardware(normalized_distances)
+    heisenberg_colors = run_heisenberg_hardware(normalized_distances, saturation, value, radius)
     # print(f"Generated {len(heisenberg_colors)} Heisenberg colors")
 
     # Interpolate the path to get all pixels
