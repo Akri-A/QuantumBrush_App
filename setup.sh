@@ -321,7 +321,8 @@ setup_python_environment() {
         "qiskit-ibm-runtime>=0.20.0" \
         "qiskit-aer>=0.17.0" \
         "pytest>=7.0.0" \
-        "black>=23.0.0"
+        "black>=23.0.0" \
+        "matplotlib>=3.10.0" \
 
 
     # Get the Python path from the conda environment

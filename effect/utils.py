@@ -4,7 +4,7 @@ from qiskit.primitives import BackendEstimatorV2 as Estimator
 import os
 from qiskit_aer import AerSimulator
 import colorsys 
-
+from itertools import product
 
 
 def svd(matrix=None,U=None,S=None,Vt=None):
@@ -43,6 +43,29 @@ def points_within_radius(points, radius, border = None):
     all_points = points[:, None, :] + offsets[None, :, :]
     # Reshape and get unique points
     result = np.unique(all_points.reshape(-1, 2), axis=0)
+
+    if border is not None:
+        result = np.clip(result, [0, 0], [border[0] - 1, border[1] - 1])
+
+    return result
+
+
+
+def points_within_lasso(points,border = None):
+    min_x = np.min(points[:,1])
+    max_x = np.max(points[:,1])+1
+    min_y = np.min(points[:,0])
+    max_y = np.max(points[:,0])+1
+
+    grid = list(product(np.arange(min_y,max_y), np.arange(min_x,max_x)))
+    # Create path from polygon
+    path = Path(points)
+
+    # Test which points are inside the path
+    mask = path.contains_points(grid)
+
+    # Get the pixel coordinates that are inside
+    result = np.array(grid)[mask]
 
     if border is not None:
         result = np.clip(result, [0, 0], [border[0] - 1, border[1] - 1])
