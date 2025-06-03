@@ -219,6 +219,7 @@ if __name__ == "__main__":
         dump_json(instructions, args.stroke_path)
 
         try:
+            print("Trying the effect")
             #Process the effect
             data = process_effect(instructions)
 

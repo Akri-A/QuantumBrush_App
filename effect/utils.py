@@ -6,7 +6,6 @@ from qiskit_aer import AerSimulator
 import colorsys 
 from itertools import product
 import matplotlib.pyplot as plt
-from matplotlib.path import Path
 
 def svd(matrix=None,U=None,S=None,Vt=None):
     if U is not None:
@@ -60,7 +59,7 @@ def points_within_lasso(points,border = None):
 
     grid = list(product(np.arange(min_y,max_y), np.arange(min_x,max_x)))
     # Create path from polygon
-    path = Path(points)
+    path = plt.Path(points)
 
     # Test which points are inside the path
     mask = path.contains_points(grid)
@@ -74,7 +73,7 @@ def points_within_lasso(points,border = None):
     return result
 
 
-def run_estimator(circuit, operators, backend=None, options = None):
+def run_estimatore(circuit, operators, backend=None, options = None):
     #iqm_server_url = "https://cocos.resonance.meetiqm.com/garnet:mock"  # Replace this with the correct URL
     #provider = IQMProvider(iqm_server_url)
     #backend = provider.get_backend('garnet')
@@ -97,6 +96,51 @@ def run_estimator(circuit, operators, backend=None, options = None):
 
     pub_result = job.result()[0]
     obs = pub_result.data.evs
+    return obs
+
+
+def run_estimator(circuits, operators, backend=None, options = None):
+    '''Runs the estimator on the provided circuits and operators.
+    It can receive a single circuit or a list of circuits.
+    It can receive a single operator or a list of operators or a list of list of operators (one for each circuit).
+    '''
+    
+    #iqm_server_url = "https://cocos.resonance.meetiqm.com/garnet:mock"  # Replace this with the correct URL
+    #provider = IQMProvider(iqm_server_url)
+    #backend = provider.get_backend('garnet')
+    #sampler = BackendSamplerV2(backend, options={"default_shots": 1000})
+    if backend is None:
+        backend = AerSimulator()
+
+    estimator = Estimator(backend=backend, options=options)
+
+    pm = generate_preset_pass_manager(backend=backend, optimization_level=2)
+
+    if isinstance(circuits, list):
+        isa_circuits = [pm.run(circuit) for circuit in circuits]
+    else:
+        isa_circuits = [pm.run(circuits)]
+
+    n_circuits = len(isa_circuits)
+
+    if isinstance(operators,list):
+        if isinstance(operators[0], list):
+            assert len(operators) == n_circuits, "Number of circuits and operators must match"
+            isa_observables = [[op.apply_layout(isa_circuits[i].layout) for op in ops] for i,ops in enumerate(operators)]
+        else:
+            isa_observables = [[op.apply_layout(isa_circuits[0].layout) for op in operators]] * n_circuits
+    else:
+        isa_observables = [[operators.apply_layout(isa_circuits[0].layout)]] * n_circuits
+
+    isa_inputs = list(zip(isa_circuits, isa_observables))
+    job = estimator.run(isa_inputs)
+
+    pub_result = job.result()
+    obs = [pub_result[i].data.evs for i in range(n_circuits)]
+
+    if n_circuits == 1:
+        return obs[0]
+    
     return obs
 
 def bresenham_line(x1, y1, x2, y2):

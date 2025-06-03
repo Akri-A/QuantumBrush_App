@@ -37,9 +37,9 @@ def drop(initial_angles, target_angle,strength):
             qc.ry(np.pi/(num_qubits-1), num_qubits)
 
     ops = [SparsePauliOp(Pauli('I'*(num_qubits-i) + p + 'I'*i)) for p in ['X','Y','Z']  for i in range(num_qubits) ]
-    print(ops)
-    obs = utils.run_estimator(qc,ops)
 
+    obs = utils.run_estimator(qc,ops)
+    print("obs",obs)
     x_expectations = obs[:num_qubits]
     y_expectations = obs[num_qubits:2*num_qubits]
     z_expectations = obs[2*num_qubits:]
