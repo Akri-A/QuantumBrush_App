@@ -3,63 +3,12 @@ import numpy as np
 from qiskit import QuantumCircuit, generate_preset_pass_manager
 from qiskit.quantum_info import Pauli, SparsePauliOp, Statevector,partial_trace
 from qiskit.circuit.library import RXGate, RZGate,XGate,ZGate,IGate,StatePreparation
-from qiskit.primitives import BackendSamplerV2
-from iqm import qiskit_iqm
-from iqm.qiskit_iqm import IQMProvider
+from qiskit_ibm_runtime.fake_provider import FakeManilaV2,FakeBrisbane
+import importlib.util
 
-iqm_server_url = "https://cocos.resonance.meetiqm.com/garnet:mock"  # Replace this with the correct URL
-provider = IQMProvider(iqm_server_url)
-backend = provider.get_backend('garnet')
-sampler = BackendSamplerV2(backend, options={"default_shots": 1000})
-
-
-def svd(matrix=None,U=None,S=None,Vt=None):
-    if U is not None:
-        S_matrix = np.diag(S)  # Convert singular values into a diagonal matrix
-        mat = U @ S_matrix @ Vt
-        return mat
-
-    """Compute the Ordered Singular Value Decomposition (SVD) of a matrix."""
-    U, S, Vt = np.linalg.svd(matrix, full_matrices=False)
-    sorted_indices = np.argsort(S)[::-1]  # Sort singular values in descending order
-    return U[:, sorted_indices], S[sorted_indices], Vt[sorted_indices, :]
-
-
-def square_region(click, radius):
-    horizontal = np.arange(click[1] - radius, click[1] + radius + 1,dtype=int)
-    vertical = np.arange(click[0] - radius, click[0] + radius + 1,dtype=int)
-    mesh_x, mesh_y = np.meshgrid(horizontal, vertical)
-    points = np.stack((mesh_y.flatten(), mesh_x.flatten()), axis=-1)
-    return points
-
-def points_within_radius(points, radius, border = None):
-    """
-    Given a set of points and a radius, return all points within the radius.
-    Args:
-        points (np.ndarray): Array of shape (N, 2) where N is the number of points.
-        radius (int): The radius to search within.
-    Returns:
-        np.ndarray: Array of points within the radius.
-    """
-    if len(points.shape) == 1:
-        points = np.array([points])
-
-    assert radius > 0, "Radius must be positive"
-    assert isinstance(points, np.ndarray), "Points must be a numpy array"
-
-    # Precompute offsets within the radius
-    y, x = np.ogrid[-radius:radius+1, -radius:radius+1]
-    mask = x**2 + y**2 <= radius**2
-    offsets = np.stack(np.nonzero(mask), axis=-1) - radius
-    # Broadcast add offsets to all points
-    all_points = points[:, None, :] + offsets[None, :, :]
-    # Reshape and get unique points
-    result = np.unique(all_points.reshape(-1, 2), axis=0)
-
-    if border is not None:
-        result = np.clip(result, [0, 0], [border[0] - 1, border[1] - 1])
-
-    return result
+spec = importlib.util.spec_from_file_location("utils", "effect/utils.py")
+utils = importlib.util.module_from_spec(spec)
+spec.loader.exec_module(utils)
 
 
 
@@ -71,7 +20,6 @@ def prep(s0,s1=None): #s0 is the final state and s1 is the initial state
         #print(f"s1 {s1}")
     assert s0**2 + s1**2 + s0*s1 - s0 -s1 <= 10**(-10), "Coefs must satisfy the ellipse inequality"
     return StatePreparation([np.sqrt((s0 + s1) / 2), np.sqrt((1 - s0) / 2), 0, np.sqrt((1 - s1) / 2)])
-
 
 def ua_cloning(intial_angles, s0=2/3):
     '''
@@ -96,18 +44,11 @@ def ua_cloning(intial_angles, s0=2/3):
     qc.cx(2, 0)
     qc.cx(1, 0)
 
-    sv = Statevector(qc)
+    ops = [SparsePauliOp(Pauli('I'*(num_qubits-i-1) + p + 'I'*i)) for i in [0,2] for p in ['X','Y','Z'] ]
 
-    x_ops = [SparsePauliOp(Pauli('I'*(num_qubits-i) + 'X' + 'I'*i)) for i in [0,2]]
-    y_ops = [SparsePauliOp(Pauli('I'*(num_qubits-i) + 'Y' + 'I'*i)) for i in [0,2]]
-    z_ops = [SparsePauliOp(Pauli('I'*(num_qubits-i) + 'Z' + 'I'*i)) for i in [0,2]]
-
-    # Calculate expectation values
-    x_expectations = [sv.expectation_value(op).real for op in x_ops]
-    y_expectations = [sv.expectation_value(op).real for op in y_ops]
-    z_expectations = [sv.expectation_value(op).real for op in z_ops]
-
-    return list(zip(x_expectations, y_expectations, z_expectations))
+    obs = utils.run_estimator(qc,ops)
+ 
+    return obs[:3], obs[3:]
 
 # The only thing that you need to change is this function
 def run(params):
@@ -135,45 +76,46 @@ def run(params):
     print(f"Clicks: {clicks}")
 
     # Create the region around those points
-    copy_region = points_within_radius(clicks[0], params["user_input"]["Radius"], border = (height, width))
+    copy_region = utils.points_within_radius(clicks[0], params["user_input"]["Radius"], border = (height, width))
 
     # Get the RGB values of the copy region
     copy_selection = image[copy_region[:, 0], copy_region[:, 1],:3]
     copy_selection = copy_selection.astype(np.float32) / 255.0
 
-    U,S,V = svd(copy_selection)
+    U,S,V = utils.svd(copy_selection)
    
     x,y,z = np.log(S)
     mean_S = [np.mean(S)] * 3
-    print("original",x,y,z)
+
     phi = np.mod(np.arctan2(y, x), 2 * np.pi) 
     theta = np.mod(np.arctan2(np.sqrt(x**2 + y**2), z), 2 * np.pi)
+    r = np.linalg.norm([x,y,z])
 
+    print("intial", x/r,y/r,z/r)
     copy_coord, paste_coord = ua_cloning((theta,phi), s0=params["user_input"]["Strength"])
 
     copy_r = np.linalg.norm(copy_coord)
     paste_r = np.linalg.norm(paste_coord)
+    print(f"copy {copy_coord} {copy_r} paste {paste_coord} {paste_r}")
 
     if copy_r < 10**-10:
         copy_coord = mean_S
     else:
-        copy_coord = copy_r * np.exp( np.array(copy_coord) * x / copy_coord[0]  ) + (1-copy_r) * np.mean(S)
+        copy_coord = copy_r * np.exp( np.array(copy_coord) * r / copy_r  ) + (1-copy_r) * np.mean(S)
 
     if paste_r < 10**-10:
         paste_coord = mean_S
     else:
-        paste_coord = paste_r * np.exp( np.array(paste_coord) * x / paste_coord[0]  ) + (1-paste_r) * np.mean(S)
+        paste_coord = paste_r * np.exp( np.array(paste_coord) * r / paste_r   ) + (1-paste_r) * np.mean(S)
     
     print(f"final {copy_coord} {paste_coord}")
-    copy_selection = svd(U=U, S=copy_coord, Vt=V)
-    paste_selection = svd(U=U, S=paste_coord, Vt=V)
-
-    #copy_selection = np.clip(copy_selection,0,1)
-    #paste_selection = np.clip(paste_selection,0,1)
+    copy_selection = utils.svd(U=U, S=copy_coord, Vt=V)
+    paste_selection = utils.svd(U=U, S=paste_coord, Vt=V)
 
     image[copy_region[:, 0], copy_region[:, 1],:3] = (copy_selection * 255).astype(np.uint8)
 
-    paste_region = points_within_radius(clicks[1], params["user_input"]["Radius"], border = (height, width))
+    paste_region = utils.points_within_radius(clicks[1], params["user_input"]["Radius"], border = (height, width))
+
     image[paste_region[:, 0], paste_region[:, 1],:3] = (paste_selection * 255).astype(np.uint8)
 
     return image
