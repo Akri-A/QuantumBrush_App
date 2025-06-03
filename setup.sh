@@ -317,8 +317,9 @@ setup_python_environment() {
     # Install via pip (for packages not available in conda or for specific versions)
     conda run -n quantumbrush pip install \
         "Pillow>=10.0.0" \
-        "qiskit>=1.0.0" \
+        "qiskit>=2.0.0" \
         "qiskit-ibm-runtime>=0.20.0" \
+        "qiskit-aer>=0.17.0" \
         "pytest>=7.0.0" \
         "black>=23.0.0"
 
