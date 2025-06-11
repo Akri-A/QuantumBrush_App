@@ -14,7 +14,7 @@
         "Radius": "int",
         "Strength": "float",
         "Saturation": "float",
-        "Value": "float"
+        "Lightness": "float"
     },
     "stroke_input": {
         "image_rgba": "array",
