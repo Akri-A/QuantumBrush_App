@@ -79,7 +79,7 @@ def run_estimatore(circuit, operators, backend=None, options = None):
     #backend = provider.get_backend('garnet')
     #sampler = BackendSamplerV2(backend, options={"default_shots": 1000})
     if backend is None:
-        backend = AerSimulator()
+        backend = AerSimulator(method = "matrix_product_state")
 
     estimator = Estimator(backend=backend, options=options)
 
