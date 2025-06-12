@@ -1,13 +1,6 @@
 #Add any dependencies but don't forget to list them in the requirements if they need to be pip installed
 import numpy as np
 import time  # Added proper import for sleep functionality
-import importlib.util
-
-#Import utils from the utils.py file
-spec = importlib.util.spec_from_file_location("utils", "effect/utils.py")
-utils = importlib.util.module_from_spec(spec)
-spec.loader.exec_module(utils)
-
 
 # The only thing that you need to change is this function
 def run(params):
@@ -32,7 +25,5 @@ def run(params):
     #The only thing that you need to do is to modify the image
     #image = ...
 
-    # You can use any functions form utils.py by using utils.function_name()
-    
     # And return the modified image, nothing else
     return image
