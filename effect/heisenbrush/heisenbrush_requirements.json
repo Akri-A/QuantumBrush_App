@@ -11,10 +11,30 @@
         "qiskit_ibm_runtime": ">=0.20.0"
     },
     "user_input": {
-        "Radius": "int",
-        "Strength": "float",
-        "Saturation": "float",
-        "Lightness": "float"
+        "Radius": {
+            "type": "int",
+            "min": 0,
+            "max": 100,
+            "default": 20 
+        },
+        "Strength": {
+            "type": "float",
+            "min": 0,
+            "max": 1,
+            "default": 1 
+        },
+        "Saturation": {
+            "type": "float",
+            "min": 0,
+            "max": 1,
+            "default": 1 
+        },
+        "Value": {
+            "type": "float",
+            "min": 0,
+            "max": 1,
+            "default": 1 
+        }
     },
     "stroke_input": {
         "image_rgba": "array",
