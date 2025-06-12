@@ -3,15 +3,11 @@ import numpy as np
 import colorsys
 from qiskit import QuantumCircuit, QuantumRegister, transpile,generate_preset_pass_manager
 from qiskit.quantum_info import SparsePauliOp
-# from qiskit_ibm_runtime.fake_provider import FakeManilaV2  # Using smaller backend
-
-
+from qiskit_ibm_runtime.fake_provider import FakeManilaV2  # Using smaller backend
 from qiskit_ibm_runtime import EstimatorV2 as Estimator
-from qiskit_ibm_runtime.fake_provider import FakeManilaV2#FakeSingaporeV2 #TODO: problem with devices larger than 24 qubits
-# Initialize backend for Heisenberg functions - using smaller backend
-backend = FakeManilaV2()  # 5 qubits
 
-# backend=FakeSingaporeV2()  # 20 qubits
+# Initialize backend for Heisenberg functions - using smaller backend
+backend = FakeManilaV2()  # 5 qubits instead of 133
 
 def points_within_radius(points, radius):
     """
@@ -49,26 +45,26 @@ def create_heisenberg_hamiltonian(n_qubits: int, J_list: list, hz_list: list, hx
     Returns:
         SparsePauliOp: The Heisenberg Hamiltonian as a sparse Pauli operator
     """
-    # if not isinstance(n_qubits, int) or n_qubits < 2:
-    #     n_qubits = 4
+    if not isinstance(n_qubits, int) or n_qubits < 2:
+        n_qubits = 4
 
-    # if not isinstance(J_list, list) or not all(isinstance(j, (int, float)) for j in J_list):
-    #     J_list =[-0.5]*n_qubits
-    # else:
-    #     if len(J_list) != n_qubits:
-    #         raise ValueError("Length of J_list must be equal to n_qubits.")
+    if not isinstance(J_list, list) or not all(isinstance(j, (int, float)) for j in J_list):
+        J_list = np.random.uniform(-1, 1, n_qubits-1)
+    else:
+        if len(J_list) != n_qubits - 1:
+            raise ValueError("Length of J_list must be equal to n_qubits - 1.")
 
-    # if not isinstance(hz_list, list) or not all(isinstance(hz, (int, float)) for hz in hz_list):
-    #     hz_list =[0.1]*n_qubits
-    # else:
-    #     if len(hz_list) != n_qubits:
-    #         raise ValueError("Length of hz_list must be equal to n_qubits.")
+    if not isinstance(hz_list, list) or not all(isinstance(hz, (int, float)) for hz in hz_list):
+        hz_list = np.random.uniform(-1, 1, n_qubits)
+    else:
+        if len(hz_list) != n_qubits:
+            raise ValueError("Length of hz_list must be equal to n_qubits.")
 
-    # if not isinstance(hx_list, list) or not all(isinstance(hx, (int, float)) for hx in hx_list):
-    #     hx_list =[0.5]*n_qubits
-    # else:
-    #     if len(hx_list) != n_qubits:
-    #         raise ValueError("Length of hx_list must be equal to n_qubits.")
+    if not isinstance(hx_list, list) or not all(isinstance(hx, (int, float)) for hx in hx_list):
+        hx_list = np.random.uniform(-1, 1, n_qubits)
+    else:
+        if len(hx_list) != n_qubits:
+            raise ValueError("Length of hx_list must be equal to n_qubits.")
 
     pauli_strings = []
     coefficients = []
@@ -114,26 +110,26 @@ def time_evolution_Heisenberg(n_qubits: int, J_list: list, hz_list: list, hx_lis
     Returns:
         circ_dt: QuantumCircuit of the time evolution
     """
-    # if not isinstance(n_qubits, int) or n_qubits < 2:
-    #     n_qubits = 4
+    if not isinstance(n_qubits, int) or n_qubits < 2:
+        n_qubits = 4
 
-    # if not isinstance(J_list, list) or not all(isinstance(j, (int, float)) for j in J_list):
-    #     J_list =[-0.5]*n_qubits
-    # else:
-    #     if len(J_list) != n_qubits:
-    #         raise ValueError("Length of J_list must be equal to n_qubits.")
+    if not isinstance(J_list, list) or not all(isinstance(j, (int, float)) for j in J_list):
+        J_list = np.random.uniform(-1, 1, n_qubits-1)
+    else:
+        if len(J_list) != n_qubits - 1:
+            raise ValueError("Length of J_list must be equal to n_qubits - 1.")
 
-    # if not isinstance(hz_list, list) or not all(isinstance(hz, (int, float)) for hz in hz_list):
-    #     hz_list =[0.1]*n_qubits
-    # else:
-    #     if len(hz_list) != n_qubits:
-    #         raise ValueError("Length of hz_list must be equal to n_qubits.")
+    if not isinstance(hz_list, list) or not all(isinstance(hz, (int, float)) for hz in hz_list):
+        hz_list = np.random.uniform(-1, 1, n_qubits)
+    else:
+        if len(hz_list) != n_qubits:
+            raise ValueError("Length of hz_list must be equal to n_qubits.")
 
-    # if not isinstance(hx_list, list) or not all(isinstance(hx, (int, float)) for hx in hx_list):
-    #     hx_list =[0.5]*n_qubits
-    # else:
-    #     if len(hx_list) != n_qubits:
-    #         raise ValueError("Length of hx_list must be equal to n_qubits.")
+    if not isinstance(hx_list, list) or not all(isinstance(hx, (int, float)) for hx in hx_list):
+        hx_list = np.random.uniform(-1, 1, n_qubits)
+    else:
+        if len(hx_list) != n_qubits:
+            raise ValueError("Length of hx_list must be equal to n_qubits.")
 
     if not isinstance(dt, (int, float)):
         dt = 0.1
@@ -157,7 +153,7 @@ def time_evolution_Heisenberg(n_qubits: int, J_list: list, hz_list: list, hx_lis
 
     return circ_dt
 
-def run_heisenberg_hardware(dt_list,saturation, lightness, radius):
+def run_heisenberg_hardware(dt_list,saturation, value, radius):
     """
     Run Heisenberg model simulation on quantum hardware simulator.
 
@@ -170,24 +166,21 @@ def run_heisenberg_hardware(dt_list,saturation, lightness, radius):
     try:
         # Backend
         estimator = Estimator(backend)
-        estimator.options.default_shots = 100
 
         nsteps = len(dt_list)
-        # print(f"Running Heisenberg simulation with {nsteps} ")
 
         n_qubits = 2 if radius < 2 else min(radius, 20) #XXX: fixed to 20 qubits max
 
-
-        J_list =[-0.5]*n_qubits
-        hz_list =[0.5]*n_qubits
-        hx_list =[0.5]*n_qubits
-
+        #TODO: Hardcoding all the parameters for now
+        J_list =np.random.uniform(-1, 1, n_qubits-1 )   # For Z_n Z_{n+1}
+        hz_list =np.random.uniform(-1, 1, n_qubits)    # For Z_n
+        hx_list =np.random.uniform(-1, 1, n_qubits)    # For X_n
 
         circuits=[]
         circ = QuantumCircuit(n_qubits)
         ### start time evolution
         for step,dt in zip(range(nsteps),dt_list):
-            print(f"J_list: {J_list}, hz_list: {hz_list}, hx_list: {hx_list}, dt: {dt}")
+            # print('step: ', step)
             circ_dt = time_evolution_Heisenberg(n_qubits, J_list, hz_list, hx_list, dt)
             circ = circ.compose(circ_dt)
             circuits.append(circ.copy())
@@ -204,8 +197,7 @@ def run_heisenberg_hardware(dt_list,saturation, lightness, radius):
             isa_obs = obs.apply_layout(isa_circuit.layout)
             pubs.append((isa_circuit, isa_obs))
 
-        # pubs=[(circs,hamilt) for circs,hamilt in zip(circuits,observables)]
-        # print('run job on')
+        # print('run job')
         job = estimator.run(pubs)
         job_result = job.result()
         # Extract the expectation values
@@ -220,9 +212,9 @@ def run_heisenberg_hardware(dt_list,saturation, lightness, radius):
         vmin, vmax = values.min(), values.max()
         normalized = (values - vmin) / (vmax - vmin)
 
-        # Map normalized values to HSL-based RGB
+        # Map normalized values to HSV-based RGB
         color_results = [
-            tuple(int(round(c * 255)) for c in colorsys.hls_to_rgb(float(h),lightness,  saturation))
+            tuple(int(round(c * 255)) for c in colorsys.hsv_to_rgb(float(h), saturation, value))
             for h in normalized
         ]
 
@@ -299,8 +291,8 @@ def run(params):
     saturation = params["user_input"]["Saturation"]
     assert saturation >= 0 and saturation <= 1, "Saturation must be between 0 and 1"
 
-    lightness = params["user_input"]["Lightness"]
-    assert lightness >= 0 and lightness <= 1, "Lightness must be between 0 and 1"
+    value = params["user_input"]["Value"]
+    assert value >= 0 and value <= 1, "Value must be between 0 and 1"
 
     # Calculate distances between consecutive points in the path
     distances = []
@@ -320,7 +312,7 @@ def run(params):
     normalized_distances=normalized_distances[:30] if len(normalized_distances) > 30 else normalized_distances #TODO: notice the fixed distances for time evolution
 
     # Run Heisenberg simulation to get colors
-    heisenberg_colors = run_heisenberg_hardware(normalized_distances, saturation, lightness, radius)
+    heisenberg_colors = run_heisenberg_hardware(normalized_distances, saturation, value, radius)
     # print(f"Generated {len(heisenberg_colors)} Heisenberg colors")
 
     # Interpolate the path to get all pixels

@@ -95,19 +95,24 @@ def process_effect(instr: dict):
 
 
     # Process user_input and stroke_input
-    for input_type in ["user_input", "stroke_input"]:
-        for key in req[input_type]:
-            if key == "image_rgba":
-                continue # Skip image_rgba as it's already processed
+    for key in req["user_input"]:
+        if key not in instr["user_input"]:
+            raise KeyError(f"Key '{key}' not found in user_input field of stroke instructions.")
+        
+        req["user_input"][key] = process_variable(req["user_input"][key]["type"], instr["user_input"][key])
 
-            if key not in instr[input_type]:
-                raise KeyError(f"Key '{key}' not found in '{input_type}' of stroke instructions.")
-            
-            req[input_type][key] = process_variable(req[input_type][key], instr[input_type][key])
+    for key in req["stroke_input"]:
+        if key == "image_rgba":
+            continue # Skip image_rgba as it's already processed
 
-            # I need to rotate clicks and paths into (y,x) format
-            if ( key == "clicks" or key == "path" ) and input_type == "stroke_input":
-                req[input_type][key] = req[input_type][key][..., ::-1]
+        if key not in instr["stroke_input"]:
+            raise KeyError(f"Key '{key}' not found in stroke_input of stroke instructions.")
+        
+        req["stroke_input"][key] = process_variable(req["stroke_input"][key], instr["stroke_input"][key])
+
+        # I need to rotate clicks and paths into (y,x) format
+        if ( key == "clicks" or key == "path" ):
+            req["stroke_input"][key] = req["stroke_input"][key][..., ::-1]
 
 
     # Process any other flags
@@ -219,7 +224,6 @@ if __name__ == "__main__":
         dump_json(instructions, args.stroke_path)
 
         try:
-            print("Trying the effect")
             #Process the effect
             data = process_effect(instructions)
 
