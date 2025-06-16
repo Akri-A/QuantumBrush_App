@@ -3,11 +3,86 @@ import numpy as np
 import colorsys
 from qiskit import QuantumCircuit
 from qiskit.quantum_info import Pauli, SparsePauliOp, Statevector, entropy, partial_trace
-import importlib.util
 
-spec = importlib.util.spec_from_file_location("utils", "effect/utils.py")
-utils = importlib.util.module_from_spec(spec)
-spec.loader.exec_module(utils)
+def points_within_radius(points, radius):
+    """
+    Given a set of points and a radius, return all points within the radius.
+    Args:
+        points (np.ndarray): Array of shape (N, 2) where N is the number of points.
+        radius (int): The radius to search within.
+    Returns:
+        np.ndarray: Array of points within the radius.
+    """
+
+
+    assert radius > 0, "Radius must be positive"
+    assert isinstance(points, np.ndarray), "Points must be a numpy array"
+
+    # Precompute offsets within the radius
+    y, x = np.ogrid[-radius:radius+1, -radius:radius+1]
+    mask = x**2 + y**2 <= radius**2
+    offsets = np.stack(np.nonzero(mask), axis=-1) - radius
+    # Broadcast add offsets to all points
+    all_points = points[:, None, :] + offsets[None, :, :]
+    # Reshape and get unique points
+    result = np.unique(all_points.reshape(-1, 2), axis=0)
+    return result
+
+def rgb_to_hls(rgba: np.ndarray):
+    """
+    Convert an RGB array to HLS format.
+    If the input is RGBA, the alpha channel is preserved.
+    Args:
+        rgba (np.ndarray): Input array of shape (N, 4) or (N, 3).
+    Returns:
+        np.ndarray: Converted array in HLS format.
+    """
+
+    if rgba.shape[-1] == 4:
+        rgb = rgba[..., :3]
+
+        if len(rgb.shape) == 1:
+            hls = colorsys.rgb_to_hls(*rgb)
+            hls.append(rgba[3])
+
+        else:
+            hls = np.apply_along_axis(lambda x: colorsys.rgb_to_hls(*x), -1, rgb)
+            hls = np.concatenate([hls, rgba[..., 3][..., np.newaxis]], axis=-1)
+    
+    else:
+        rgb = rgba
+
+        if len(rgb.shape) == 1:
+            hls = colorsys.rgb_to_hls(*rgb)
+
+        else:
+            hls = np.apply_along_axis(lambda x: colorsys.rgb_to_hls(*x), -1, rgb)
+
+    return hls
+    
+def hls_to_rgb(hlsa: np.ndarray):
+
+    if hlsa.shape[-1] == 4:
+        hls = hlsa[..., :3]
+
+        if len(hls.shape) == 1:
+            rgb = colorsys.hls_to_rgb(*hls)
+            rgb.append(hlsa[3])
+
+        else:
+            rgb = np.apply_along_axis(lambda x: colorsys.hls_to_rgb(*x), -1, hls)
+            rgb = np.concatenate([rgb, hlsa[..., 3][..., np.newaxis]], axis=-1)
+    
+    else:
+        hls = hlsa
+
+        if len(hls.shape) == 1:
+            rgb = colorsys.hls_to_rgb(*hls)
+
+        else:
+            rgb = np.apply_along_axis(lambda x: colorsys.hls_to_rgb(*x), -1, hls)
+
+    return rgb
 
 
 def drop(initial_angles, target_angle,strength):
@@ -36,13 +111,19 @@ def drop(initial_angles, target_angle,strength):
         if num_qubits > 1:
             qc.ry(np.pi/(num_qubits-1), num_qubits)
 
-    ops = [SparsePauliOp(Pauli('I'*(num_qubits-i) + p + 'I'*i)) for p in ['X','Y','Z']  for i in range(num_qubits) ]
 
-    obs = utils.run_estimator(qc,ops)
-    print("obs",obs)
-    x_expectations = obs[:num_qubits]
-    y_expectations = obs[num_qubits:2*num_qubits]
-    z_expectations = obs[2*num_qubits:]
+    # Get statevector for expectation value calculation
+    sv = Statevector.from_instruction(qc)
+    #sv = partial_trace(sv,num_qubits)
+    # Define Pauli operators for X and Z for each qubit
+    x_ops = [SparsePauliOp(Pauli('I'*(num_qubits-i) + 'X' + 'I'*i)) for i in range(num_qubits)]
+    y_ops = [SparsePauliOp(Pauli('I'*(num_qubits-i) + 'Y' + 'I'*i)) for i in range(num_qubits)]
+    z_ops = [SparsePauliOp(Pauli('I'*(num_qubits-i) + 'Z' + 'I'*i)) for i in range(num_qubits)]
+
+    # Calculate expectation values
+    x_expectations = [sv.expectation_value(op).real for op in x_ops]
+    y_expectations = [sv.expectation_value(op).real for op in y_ops]
+    z_expectations = [sv.expectation_value(op).real for op in z_ops]
 
     # phi = arctan2(Y, X)
     phi_expectations = [np.mod(np.arctan2(y,x),2*np.pi) for x, y in zip(x_expectations, y_expectations)]
@@ -94,19 +175,19 @@ def run(params):
     assert radius > 0, "Radius must be greater than 0"
 
     target_color = params["user_input"]["Target Color"]
-    target_color = utils.rgb_to_hls(np.array(target_color)/255.0)
+    target_color = rgb_to_hls(np.array(target_color)/255.0)
     target_angle = (2 * np.pi * target_color[0], np.pi * target_color[1])
 
     initial_angles = [] #(Theta,phi)
     pixels = []
     for lines in split_paths:
 
-        region = utils.points_within_radius(lines, radius)
+        region = points_within_radius(lines, radius)
         region = np.clip(region, [0, 0], [height - 1, width - 1])
 
         selection = image[region[:, 0], region[:, 1]]
         selection = selection.astype(np.float32) / 255.0
-        selection_hls = utils.rgb_to_hls(selection)
+        selection_hls = rgb_to_hls(selection)
     
         h_sel = np.mean(selection_hls[..., 0], axis=0)
         l_sel = np.mean(selection_hls[..., 1], axis=0)
@@ -133,7 +214,7 @@ def run(params):
         #Need to change the luminoisty
         selection_hls = np.clip(selection_hls, 0, 1)
 
-        selection_rgb = utils.hls_to_rgb(selection_hls)
+        selection_rgb = hls_to_rgb(selection_hls)
         selection_rgb = (selection_rgb * 254).astype(np.uint8)
 
         image[region[:, 0], region[:, 1]] = selection_rgb
