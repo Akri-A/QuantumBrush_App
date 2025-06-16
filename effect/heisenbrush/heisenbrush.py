@@ -2,7 +2,6 @@ import numpy as np
 import colorsys
 from qiskit import QuantumCircuit, QuantumRegister, generate_preset_pass_manager
 from qiskit.quantum_info import SparsePauliOp
-from qiskit_ibm_runtime import EstimatorV2 as Estimator
 import importlib.util
 
 spec = importlib.util.spec_from_file_location("utils", "effect/utils.py")
