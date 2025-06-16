@@ -8,22 +8,9 @@
         "numpy": ">=2.1.0"
     },
     "user_input": {
-        "Radius": {
-            "type": "int",
-            "min": 0,
-            "max": 100,
-            "default": 20 
-        },
-        "Strenght": {
-            "type": "float",
-            "min": 0,
-            "max": 1,
-            "default": 1
-        },
-        "Color": {
-            "type": "color",
-            "default": "#FF0000"
-        }
+        "Radius": "int",
+        "Strenght": "float",
+        "Color": "color"
     },
     "stroke_input": {
         "image_rgba": "array",

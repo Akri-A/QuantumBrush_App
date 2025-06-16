@@ -9,12 +9,7 @@
         "qiskit": ""
     },
     "user_input": {
-        "Strength": {
-            "type": "float",
-            "min": 0,
-            "max": 1,
-            "default": 0.33 
-        }
+        "Strength": "float"
     },
     "stroke_input": {
         "image_rgba": "array",

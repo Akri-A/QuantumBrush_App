@@ -11,6 +11,9 @@ def run(params):
     Returns:
         Image: the new numpy array of RGBA values or None if the effect failed
     """
+    # Replace incorrect os.wait(10) with proper time.sleep(10)
+    # This simulates a 10-second processing time
+    time.sleep(10)
     
     # Extract image to work from
     image = params["stroke_input"]["image_rgba"]
@@ -27,10 +30,10 @@ def run(params):
     assert params["user_input"]["Alpha"] >= 0 and params["user_input"]["Alpha"] <= 1, "Alpha must be between 0 and 1"
     
     for p in params["stroke_input"]["path"]:
-        min_x = np.clip(p[0]-radius, 0, width)
-        max_x = np.clip(p[0]+radius, 0, width)
-        min_y = np.clip(p[1]-radius, 0, height)
-        max_y = np.clip(p[1]+radius, 0, height)
+        min_x = np.clip(p[1]-radius, 0, width)
+        max_x = np.clip(p[1]+radius, 0, width)
+        min_y = np.clip(p[0]-radius, 0, height)
+        max_y = np.clip(p[0]+radius, 0, height)
 
         image[min_x:max_x, min_y:max_y, :3] = params["user_input"]["Color"]
         # Restore the alpha channel setting that was commented out
