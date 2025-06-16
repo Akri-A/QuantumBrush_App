@@ -6,6 +6,7 @@ from qiskit_aer import AerSimulator
 import colorsys 
 from itertools import product
 import matplotlib.pyplot as plt
+from matplotlib.path import Path as plt_path
 
 def svd(matrix=None,U=None,S=None,Vt=None):
     if U is not None:
@@ -59,8 +60,7 @@ def points_within_lasso(points,border = None):
 
     grid = list(product(np.arange(min_y,max_y), np.arange(min_x,max_x)))
     # Create path from polygon
-    path = plt.Path(points)
-
+    path = plt_path(points)
     # Test which points are inside the path
     mask = path.contains_points(grid)
 
@@ -72,31 +72,6 @@ def points_within_lasso(points,border = None):
 
     return result
 
-
-def run_estimatore(circuit, operators, backend=None, options = None):
-    #iqm_server_url = "https://cocos.resonance.meetiqm.com/garnet:mock"  # Replace this with the correct URL
-    #provider = IQMProvider(iqm_server_url)
-    #backend = provider.get_backend('garnet')
-    #sampler = BackendSamplerV2(backend, options={"default_shots": 1000})
-    if backend is None:
-        backend = AerSimulator(method = "matrix_product_state")
-
-    estimator = Estimator(backend=backend, options=options)
-
-    pm = generate_preset_pass_manager(backend=backend, optimization_level=2)
-
-    isa_circuit = pm.run(circuit)
-
-    if isinstance(operators,list):
-        isa_observable = [op.apply_layout(isa_circuit.layout) for op in operators]
-    else:
-        isa_observable = operators.apply_layout(isa_circuit.layout)
-
-    job = estimator.run([(isa_circuit, isa_observable)])
-
-    pub_result = job.result()[0]
-    obs = pub_result.data.evs
-    return obs
 
 
 def run_estimator(circuits, operators, backend=None, options = None):
