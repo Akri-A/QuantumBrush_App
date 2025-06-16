@@ -2,11 +2,7 @@ import numpy as np
 import colorsys
 from qiskit import QuantumCircuit, QuantumRegister, generate_preset_pass_manager
 from qiskit.quantum_info import SparsePauliOp
-# from qiskit_ibm_runtime.fake_provider import FakeManilaV2  # Using smaller backend
 from qiskit_ibm_runtime import EstimatorV2 as Estimator
-
-# backend = FakeManilaV2()  # 5 qubits
-
 import importlib.util
 
 spec = importlib.util.spec_from_file_location("utils", "effect/utils.py")
@@ -112,7 +108,7 @@ def time_evolution_Heisenberg(n_qubits: int, J_list: list, hz_list: list, hx_lis
     q = QuantumRegister(n_qubits)
     circ_dt = QuantumCircuit(q)
 
-    for n in range(n_qubits-1):
+    for n in range(n_qubits):
         J = J_list[n]
         ##  exp(-it * J * (X_n X_{n+1} + Y_n Y_{n+1} + Z_n Z_{n+1}))
         circ_dt.rxx(2*J*dt, q[n], q[(n+1)%n_qubits])
