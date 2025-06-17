@@ -10,7 +10,7 @@ utils = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(utils)
 
 
-def damping(initial_angles, strength):
+def damping(initial_angles, strength,invert = False):
     num_qubits = len(initial_angles)
     print("initial angles",initial_angles)
 
@@ -18,6 +18,9 @@ def damping(initial_angles, strength):
 
     qc = QuantumCircuit(num_qubits + 1)
     rotation = 2*np.arccos(1-strength)
+
+    if invert:
+        qc.x(num_qubits)
 
     # Prepare each qubit in the state defined by (theta, phi)
     for i, (phi, theta) in enumerate(initial_angles):
@@ -30,7 +33,6 @@ def damping(initial_angles, strength):
     qc.reset(qubit = num_qubits)
 
     ops = [SparsePauliOp(Pauli('I'*(num_qubits-i) + p + 'I'*i)) for p in ['X','Y','Z']  for i in range(num_qubits) ]
-    print(ops)
     obs = utils.run_estimator(qc,ops)
 
     x_expectations = obs[:num_qubits]
@@ -40,10 +42,9 @@ def damping(initial_angles, strength):
     # phi = arctan2(Y, X)
     phi_expectations = [np.mod(np.arctan2(y,x),2*np.pi) for x, y in zip(x_expectations, y_expectations)]
     # theta = arccos(Z)
-    theta_expectations = [np.arccos(np.clip(z,-1,1)) for z in z_expectations]
+    theta_expectations = [np.mod(np.arctan2(np.sqrt(x**2 + y**2),z),2*np.pi) for x, y, z in zip(x_expectations, y_expectations, z_expectations)]
 
     final_angles = list(zip(phi_expectations, theta_expectations))
-    print("final angles",final_angles)
     return final_angles
 
 
@@ -107,9 +108,6 @@ def run(params):
         h_sel = np.mean(selection_hls[..., 0], axis=0)
         l_sel = np.mean(selection_hls[..., 1], axis=0)
 
-        if invert:
-            l_sel = 1 - l_sel
-
         phi = 2 * np.pi * h_sel
         theta = np.pi * l_sel
 
@@ -119,7 +117,7 @@ def run(params):
     strength = params["user_input"]["Strength"]
     assert strength >= 0 and strength <= 1, "Strength must be between 0 and 1"
 
-    final_angles =  damping(initial_angles, strength)
+    final_angles =  damping(initial_angles, strength,invert)
 
     for i,(region,selection_hls) in enumerate(pixels):
         new_h,new_l = final_angles[i]
@@ -131,9 +129,6 @@ def run(params):
 
         #Need to change the luminoisty
         selection_hls = np.clip(selection_hls, 0, 1)
-        if invert:
-            selection_hls[..., 1] = 1 - selection_hls[..., 1]
-
         selection_rgb = utils.hls_to_rgb(selection_hls)
         selection_rgb = (selection_rgb * 254).astype(np.uint8)
 
