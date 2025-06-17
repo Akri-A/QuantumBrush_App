@@ -22,19 +22,19 @@
             "type": "float",
             "min": 0,
             "max": 1,
-            "default": 1
+            "default": 0.5
         },
         "Saturation": {
             "type": "float",
             "min": 0,
             "max": 1,
-            "default": 1
+            "default": 0.5
         },
         "Lightness": {
             "type": "float",
             "min": 0,
             "max": 1,
-            "default": 1
+            "default": 0.5
         }
     },
     "stroke_input": {
