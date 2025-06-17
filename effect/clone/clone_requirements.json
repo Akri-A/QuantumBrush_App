@@ -3,7 +3,7 @@
     "id": "clone", 
     "author": "Joao",
     "version": "1.0.0",
-    "description": "This effect will try to clone the first region clicked onto the other clicks but due to the no-cloning theorem, the copy will never be perfect",
+    "description": "This effect will try to clone the first region clicked onto the other clicks but due to the no-cloning theorem, the copy will never be perfect. To use it, click and drag on the canvas to determine the copy region and click again to determine the paste region.",
     "dependencies": {
         "numpy": ">=2.1.0",
         "qiskit": ""

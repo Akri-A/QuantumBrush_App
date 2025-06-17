@@ -31,7 +31,7 @@ def ua_cloning(intial_angles, s0=2/3):
     qc.ry(intial_angles[0],0) #theta
     qc.rz(intial_angles[1],0) #phi
 
-    PG = prep(1-s0)
+    PG = prep(s0)
     # Creating the bell states
     qc.append(PG, [1, 2])
 
