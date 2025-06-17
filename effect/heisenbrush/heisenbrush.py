@@ -8,6 +8,7 @@ spec = importlib.util.spec_from_file_location("utils", "effect/utils.py")
 utils = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(utils)
 
+
 def points_within_radius(points, radius):
     """
     Given a set of points and a radius, return all points within the radius.
@@ -153,12 +154,13 @@ def run_heisenberg_hardware(dt_list,saturation, lightness, radius):
 
         # Create the Hamiltonian
         hamiltonian = create_heisenberg_hamiltonian(n_qubits, J_list, hz_list, hx_list)
-        observables = [hamiltonian]*len(circuits)
+        observables = hamiltonian
 
         # Run the estimator
         values=utils.run_estimator(circuits, observables, backend=None, options = {"default_precision": 100})
 
-        values=np.array(values)
+        values=np.array([val[0] for val in values])
+
 
         # Normalize to [0, 1]
         vmin, vmax = values.min(), values.max()
