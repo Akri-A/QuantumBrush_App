@@ -92,8 +92,8 @@ def run(params):
     x,y,z = np.log(S)
     mean_S = [np.mean(S)] * 3
 
-    phi = np.mod(np.arctan2(y, x), 2 * np.pi) 
-    theta = np.mod(np.arctan2(np.sqrt(x**2 + y**2), z), 2 * np.pi)
+    phi = np.arctan2(y, x)
+    theta = np.arctan2(np.sqrt(x**2 + y**2), z)
     r = np.linalg.norm([x,y,z])
 
     print("intial", x/r,y/r,z/r)

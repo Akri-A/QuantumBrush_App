@@ -4,6 +4,7 @@ import colorsys
 from qiskit import QuantumCircuit
 from qiskit.quantum_info import Pauli, SparsePauliOp, Statevector
 import importlib.util
+from scipy.stats import circmean
 
 spec = importlib.util.spec_from_file_location("utils", "effect/utils.py")
 utils = importlib.util.module_from_spec(spec)
@@ -19,18 +20,19 @@ def damping(initial_angles, strength,invert = False):
     qc = QuantumCircuit(num_qubits + 1)
     rotation = 2*np.arccos(1-strength)
 
-    if invert:
-        qc.x(num_qubits)
-
     # Prepare each qubit in the state defined by (theta, phi)
     for i, (phi, theta) in enumerate(initial_angles):
         qc.ry(theta, i)
         qc.rz(phi, i)
 
+        if invert:
+            qc.x(i)
+            
         qc.cry(rotation,target_qubit = num_qubits,control_qubit  = i)
         qc.cx(target_qubit = i,control_qubit  = num_qubits)
 
-    qc.reset(qubit = num_qubits)
+        if invert:
+            qc.x(i)
 
     ops = [SparsePauliOp(Pauli('I'*(num_qubits-i) + p + 'I'*i)) for p in ['X','Y','Z']  for i in range(num_qubits) ]
     obs = utils.run_estimator(qc,ops)
@@ -40,9 +42,9 @@ def damping(initial_angles, strength,invert = False):
     z_expectations = obs[2*num_qubits:]
     
     # phi = arctan2(Y, X)
-    phi_expectations = [np.mod(np.arctan2(y,x),2*np.pi) for x, y in zip(x_expectations, y_expectations)]
+    phi_expectations = [np.arctan2(y,x) % (2 * np.pi) for x, y in zip(x_expectations, y_expectations)]
     # theta = arccos(Z)
-    theta_expectations = [np.mod(np.arctan2(np.sqrt(x**2 + y**2),z),2*np.pi) for x, y, z in zip(x_expectations, y_expectations, z_expectations)]
+    theta_expectations = [np.arctan2(np.sqrt(x**2 + y**2),z) for x, y, z in zip(x_expectations, y_expectations, z_expectations)]
 
     final_angles = list(zip(phi_expectations, theta_expectations))
     return final_angles
@@ -105,12 +107,9 @@ def run(params):
         selection = selection.astype(np.float32) / 255.0
         selection_hls = utils.rgb_to_hls(selection)
     
-        h_sel = np.mean(selection_hls[..., 0], axis=0)
-        l_sel = np.mean(selection_hls[..., 1], axis=0)
-
-        phi = 2 * np.pi * h_sel
-        theta = np.pi * l_sel
-
+        phi = circmean(2 * np.pi * selection_hls[..., 0])
+        theta = np.pi * np.mean(selection_hls[..., 1], axis=0)
+    
         initial_angles.append((phi,theta))
         pixels.append((region, selection_hls))
 
@@ -120,14 +119,16 @@ def run(params):
     final_angles =  damping(initial_angles, strength,invert)
 
     for i,(region,selection_hls) in enumerate(pixels):
-        new_h,new_l = final_angles[i]
-        old_h, old_l = initial_angles[i]
+        new_phi, new_theta = final_angles[i]
+        old_phi, old_theta = initial_angles[i]
 
-        selection_hls[...,0] += (new_h - old_h) / (2 * np.pi)
-        selection_hls[...,1] += (new_l - old_l) / np.pi
-        selection_hls[...,1] = np.mod(selection_hls[...,1], 1)
+        offset_h = (new_phi - old_phi) / (2 * np.pi)
+        offset_l = (new_theta - old_theta) / np.pi
 
-        #Need to change the luminoisty
+        selection_hls[...,0] = (selection_hls[...,0] + offset_h) % 1
+        selection_hls[...,1] += offset_l
+    
+        #Need to change the luminosity
         selection_hls = np.clip(selection_hls, 0, 1)
         selection_rgb = utils.hls_to_rgb(selection_hls)
         selection_rgb = (selection_rgb * 254).astype(np.uint8)
