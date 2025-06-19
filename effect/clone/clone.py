@@ -33,12 +33,17 @@ def ua_cloning(intial_angles, s0=2/3):
 
     PG = prep(s0)
     # Creating the bell states
-    qc.append(PG, [1, 2])
+    qc.append(PG, [2,1])
 
-    qc.cx(0, 2)
-    qc.cx(0, 1)
-    qc.cx(2, 0)
+    #qc.cx(0, 2)
+    #qc.cx(0, 1)
+    #qc.cx(2, 0)
+    #qc.cx(1, 0)
+
     qc.cx(1, 0)
+    qc.cx(2, 0)
+    qc.cx(0, 1)
+    qc.cx(0, 2)
 
     ops = [SparsePauliOp(Pauli('I'*(num_qubits-i-1) + p + 'I'*i)) for i in [0,2] for p in ['X','Y','Z'] ]
 
