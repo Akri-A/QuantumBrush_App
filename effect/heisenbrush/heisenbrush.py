@@ -9,28 +9,6 @@ utils = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(utils)
 
 
-def points_within_radius(points, radius):
-    """
-    Given a set of points and a radius, return all points within the radius.
-    Args:
-        points (np.ndarray): Array of shape (N, 2) where N is the number of points.
-        radius (int): The radius to search within.
-    Returns:
-        np.ndarray: Array of points within the radius.
-    """
-    assert radius > 0, "Radius must be positive"
-    assert isinstance(points, np.ndarray), "Points must be a numpy array"
-
-    # Precompute offsets within the radius
-    y, x = np.ogrid[-radius:radius+1, -radius:radius+1]
-    mask = x**2 + y**2 <= radius**2
-    offsets = np.stack(np.nonzero(mask), axis=-1) - radius
-    # Broadcast add offsets to all points
-    all_points = points[:, None, :] + offsets[None, :, :]
-    # Reshape and get unique points
-    result = np.unique(all_points.reshape(-1, 2), axis=0)
-    return result
-
 def scale_to_range(x, in_min=1, in_max=50, out_min=2, out_max=20):
     """
     Linearly scale x from [in_min, in_max] to [out_min, out_max].
@@ -137,11 +115,9 @@ def run_heisenberg_hardware(dt_list,saturation, lightness, radius):
         nsteps = len(dt_list)
         n_qubits = scale_to_range(radius)
 
-
         J_list =[-0.5]*n_qubits
         hz_list =[0.5]*n_qubits
         hx_list =[0.5]*n_qubits
-
 
         circuits=[]
         circ = QuantumCircuit(n_qubits)
@@ -157,7 +133,7 @@ def run_heisenberg_hardware(dt_list,saturation, lightness, radius):
         observables = hamiltonian
 
         # Run the estimator
-        values=utils.run_estimator(circuits, observables, backend=None, options = {"default_precision": 100})
+        values=utils.run_estimator(circuits, observables, backend=None)
 
         values=np.array([val[0] for val in values])
 
@@ -172,7 +148,6 @@ def run_heisenberg_hardware(dt_list,saturation, lightness, radius):
             for h in normalized
         ]
 
-
         return color_results
 
     except Exception as e:
@@ -180,39 +155,6 @@ def run_heisenberg_hardware(dt_list,saturation, lightness, radius):
 
         return
 
-
-def interpolate_pixels(points):
-    """
-    Interpolate between points to get a continuous path of pixels.
-    Args:
-        points: List of (x, y) coordinate tuples
-    Returns:
-        List of interpolated (x, y) coordinates
-    """
-    if len(points) < 2:
-        return points
-
-    interpolated = []
-    for i in range(len(points) - 1):
-        x1, y1 = points[i]
-        x2, y2 = points[i + 1]
-
-        # Calculate the distance between points
-        dx = abs(x2 - x1)
-        dy = abs(y2 - y1)
-        steps = max(dx, dy)
-
-        if steps == 0:
-            interpolated.append((x1, y1))
-            continue
-
-        # Interpolate between the two points
-        for step in range(steps + 1):
-            x = int(x1 + step * (x2 - x1) / steps)
-            y = int(y1 + step * (y2 - y1) / steps)
-            interpolated.append((x, y))
-
-    return interpolated
 
 # The main function using  Heisenberg model
 def run(params):
@@ -255,7 +197,7 @@ def run(params):
         curr_point = np.array(path[i])
         dist = np.linalg.norm(curr_point - prev_point)
         distances.append(dist)
-
+    print(distances)
     if len(distances) == 0:
         distances = [0.1]  # Default distance if path is too short
 
@@ -270,7 +212,7 @@ def run(params):
     # print(f"Generated {len(heisenberg_colors)} Heisenberg colors")
 
     # Interpolate the path to get all pixels
-    interpolated_path = interpolate_pixels(path)
+    interpolated_path = utils.interpolate_pixels(path)
 
     # Apply colors along the path
     color_idx = 0
@@ -282,7 +224,7 @@ def run(params):
         color = heisenberg_colors[color_idx] if heisenberg_colors else (255, 255, 255)
 
         # Get the region around this point
-        region = points_within_radius(np.array([[x, y]]), radius)
+        region = utils.points_within_radius(np.array([[x, y]]), radius)
         region = np.clip(region, [0, 0], [height - 1, width - 1])
 
         # Apply the color to the region

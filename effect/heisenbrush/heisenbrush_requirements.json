@@ -42,6 +42,6 @@
         "path": "array"
     },
     "flags": {
-        "smooth_path": true
+        "smooth_path": false
     }
 }
