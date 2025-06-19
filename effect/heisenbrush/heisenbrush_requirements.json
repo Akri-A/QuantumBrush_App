@@ -20,20 +20,20 @@
         },
         "Strength": {
             "type": "float",
-            "min": 0,
-            "max": 1,
+            "min": 0.0,
+            "max": 1.0,
             "default": 0.5
         },
         "Saturation": {
             "type": "float",
-            "min": 0,
-            "max": 1,
+            "min": 0.0,
+            "max": 1.0,
             "default": 0.5
         },
         "Lightness": {
             "type": "float",
-            "min": 0,
-            "max": 1,
+            "min": 0.0,
+            "max": 1.0,
             "default": 0.5
         }
     },

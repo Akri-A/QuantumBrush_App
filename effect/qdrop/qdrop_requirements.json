@@ -23,9 +23,9 @@
         },
         "Strength": {
             "type": "float",
-            "min": 0,
-            "max": 1,
-            "default": 1 
+            "min": 0.0,
+            "max": 1.0,
+            "default": 1.0 
         },
         "Target Color": {
             "type": "color",
