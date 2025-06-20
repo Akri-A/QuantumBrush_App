@@ -23,19 +23,23 @@ def drop(initial_angles, target_angle,strength):
     qc = QuantumCircuit(num_qubits + 1)
 
     qc.x(num_qubits)
-    # Prepare each qubit in the state defined by (theta, phi)
     for i, (phi, theta) in enumerate(initial_angles):
         qc.ry(theta, i)
         qc.rz(phi, i)
 
-        qc.crz(strength * (target_phi-phi),target_qubit = i,control_qubit  = num_qubits)
+    # Prepare each qubit in the state defined by (theta, phi)
+    for i, (phi, theta) in enumerate(initial_angles):
+        qc.crz( - strength * phi,target_qubit = i,control_qubit  = num_qubits)
         qc.cry(strength * (target_theta-theta),target_qubit = i,control_qubit  = num_qubits)
+        qc.crz( strength * target_phi,target_qubit = i,control_qubit  = num_qubits)
 
-        #qc.rz(np.cos(i * np.pi/(num_qubits-1) /2) * (target_phi-phi),i)
-        #qc.ry(np.cos(i * np.pi/(num_qubits-1) /2) * (target_theta-theta),i)
+        #qc.rz(- strength *phi * np.arccos(i* np.pi/(num_qubits-1)/2),i)
+        #qc.ry(strength * (target_theta-theta)  * np.arccos(i* np.pi/(num_qubits-1)/2),i)
+        #qc.rz(strength * target_phi * np.arccos(i* np.pi/(num_qubits-1)/2),i)
 
         if num_qubits > 1:
             qc.ry(np.pi/(num_qubits-1), num_qubits)
+
 
     ops = [SparsePauliOp(Pauli('I'*(num_qubits-i) + p + 'I'*i)) for p in ['X','Y','Z']  for i in range(num_qubits) ]
 
@@ -97,7 +101,7 @@ def run(params):
     target_color = params["user_input"]["Target Color"]
     target_color = utils.rgb_to_hls(np.array(target_color)/255.0)
     target_angle = (2 * np.pi * target_color[0], np.pi * target_color[1])
-
+    print("target angle", target_angle)
     initial_angles = [] #(Theta,phi)
     pixels = []
     for lines in split_paths:
@@ -111,7 +115,7 @@ def run(params):
     
         phi = circmean(2 * np.pi * selection_hls[..., 0])
         theta = np.pi * np.mean(selection_hls[..., 1], axis=0)
-
+        print("initial angle", (phi, theta))
         initial_angles.append((phi,theta))
         pixels.append((region, selection_hls))
 
@@ -119,7 +123,7 @@ def run(params):
     assert strength >= 0 and strength <= 1, "Strength must be between 0 and 1"
 
     final_angles =  drop(initial_angles, target_angle, strength)
-
+    print("final angles", final_angles)
     for i,(region,selection_hls) in enumerate(pixels):
         new_phi, new_theta = final_angles[i]
         old_phi, old_theta = initial_angles[i]
@@ -129,6 +133,7 @@ def run(params):
 
         selection_hls[...,0] = (selection_hls[...,0] + offset_h) % 1
         selection_hls[...,1] += offset_l
+        #selection_hls[...,2] *= 100000
 
         #Need to change the luminoisty
         selection_hls = np.clip(selection_hls, 0, 1)
