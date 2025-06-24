@@ -48,6 +48,8 @@ def drop(initial_angles, target_angle,strength):
         print("Entanglement entropy (tracing out control qubit):", ent)
         ops = [SparsePauliOp(Pauli('I'*(num_qubits-i) + p + 'I'*i)) for p in ['X','Y','Z']  for i in range(num_qubits) ]
 
+    ops = [SparsePauliOp(Pauli('I'*(num_qubits-i) + p + 'I'*i)) for p in ['X','Y','Z']  for i in range(num_qubits) ]
+
     obs = utils.run_estimator(qc,ops)
 
     x_expectations = obs[:num_qubits]
