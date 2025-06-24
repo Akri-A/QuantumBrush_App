@@ -25,12 +25,7 @@ def process_variable(var_type: str, variable: any):
         case "int":
             return int(variable)
         case "bool":
-            if isinstance(variable, str):
-                if variable.lower() in ["true", "1"]:
-                    return True
-                elif variable.lower() in ["false", "0"]:
-                    return False
-            raise ValueError("Invalid boolean format")
+            return bool(variable)
         case "array":
             if isinstance(variable, np.ndarray):
                 return variable
