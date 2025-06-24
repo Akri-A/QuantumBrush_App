@@ -47,7 +47,7 @@ def ua_cloning(intial_angles, s0=2/3):
 
     ops = [SparsePauliOp(Pauli('I'*(num_qubits-i-1) + p + 'I'*i)) for i in [0,2] for p in ['X','Y','Z'] ]
 
-    obs = utils.run_estimator(qc,ops)
+    obs = utils.run_estimator(qc,ops,options = {"default_precision": 1e-3})
  
     return obs[:3], obs[3:]
 
@@ -100,7 +100,7 @@ def run(params):
     phi = np.arctan2(y, x)
     theta = np.arctan2(np.sqrt(x**2 + y**2), z)
     r = np.linalg.norm([x,y,z])
-
+    print("intial SVD", S)
     print("intial", x/r,y/r,z/r)
     copy_coord, paste_coord = ua_cloning((theta,phi), s0=params["user_input"]["Strength"])
 
