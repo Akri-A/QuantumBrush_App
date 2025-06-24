@@ -1,0 +1,147 @@
+{
+  "effect_success": "true",
+  "project_id": "project_1750750997399",
+  "user_input": {
+    "Radius": "20",
+    "Invert Luminosity": "false",
+    "Number of Drops": "13",
+    "Strength": "0.034"
+  },
+  "created": true,
+  "processing_status": "completed",
+  "stroke_input": {
+    "path": [
+      [
+        724,
+        162
+      ],
+      [
+        727,
+        162
+      ],
+      [
+        730,
+        162
+      ],
+      [
+        738,
+        162
+      ],
+      [
+        749,
+        162
+      ],
+      [
+        759,
+        161
+      ],
+      [
+        771,
+        160
+      ],
+      [
+        787,
+        159
+      ],
+      [
+        801,
+        158
+      ],
+      [
+        814,
+        156
+      ],
+      [
+        830,
+        154
+      ],
+      [
+        840,
+        153
+      ],
+      [
+        857,
+        152
+      ],
+      [
+        867,
+        151
+      ],
+      [
+        878,
+        151
+      ],
+      [
+        888,
+        151
+      ],
+      [
+        898,
+        151
+      ],
+      [
+        909,
+        151
+      ],
+      [
+        918,
+        151
+      ],
+      [
+        927,
+        151
+      ],
+      [
+        934,
+        151
+      ],
+      [
+        941,
+        151
+      ],
+      [
+        946,
+        151
+      ],
+      [
+        951,
+        151
+      ],
+      [
+        953,
+        152
+      ],
+      [
+        958,
+        152
+      ],
+      [
+        960,
+        152
+      ],
+      [
+        960,
+        152
+      ],
+      [
+        960,
+        152
+      ],
+      [
+        960,
+        152
+      ]
+    ],
+    "input_location": "project/project_1750750997399/stroke/stroke_1750753386184_input.png",
+    "real_hardware": false,
+    "clicks": [[
+      724,
+      162
+    ]],
+    "output_location": "project/project_1750750997399/stroke/stroke_1750753386184_output.png"
+  },
+  "stroke_id": "stroke_1750753386184",
+  "effect_received": "true",
+  "effect_processed": "true",
+  "effect_id": "damping"
+}

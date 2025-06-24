@@ -1,0 +1,71 @@
+/Users/jsf/Documents/QuantumBrush-collab/effect/../effect/qdrop/qdrop.py:36: RuntimeWarning: invalid value encountered in arccos
+  qc.rz(strength * (target_phi-phi) * np.arccos(i* np.pi/(num_qubits-1)/2),i)
+/Users/jsf/Documents/QuantumBrush-collab/effect/../effect/qdrop/qdrop.py:37: RuntimeWarning: invalid value encountered in arccos
+  qc.ry(strength * (target_theta-theta)  * np.arccos(i* np.pi/(num_qubits-1)/2),i)
+/Users/jsf/Documents/QuantumBrush-collab/effect/../effect/qdrop/qdrop.py:36: RuntimeWarning: invalid value encountered in arccos
+  qc.rz(- strength *phi * np.arccos(i* np.pi/(num_qubits-1)/2),i)
+/Users/jsf/Documents/QuantumBrush-collab/effect/../effect/qdrop/qdrop.py:37: RuntimeWarning: invalid value encountered in arccos
+  qc.ry(strength * (target_theta-theta)  * np.arccos(i* np.pi/(num_qubits-1)/2),i)
+/Users/jsf/Documents/QuantumBrush-collab/effect/../effect/qdrop/qdrop.py:38: RuntimeWarning: invalid value encountered in arccos
+  qc.rz(strength * target_phi * np.arccos(i* np.pi/(num_qubits-1)/2),i)
+/Users/jsf/Documents/QuantumBrush-collab/effect/../effect/qdrop/qdrop.py:36: RuntimeWarning: invalid value encountered in arccos
+  qc.rz(- strength *phi * np.arccos(i* np.pi/(num_qubits-1)/2),i)
+/Users/jsf/Documents/QuantumBrush-collab/effect/../effect/qdrop/qdrop.py:37: RuntimeWarning: invalid value encountered in arccos
+  qc.ry(strength * (target_theta-theta)  * np.arccos(i* np.pi/(num_qubits-1)/2),i)
+/Users/jsf/Documents/QuantumBrush-collab/effect/../effect/qdrop/qdrop.py:38: RuntimeWarning: invalid value encountered in arccos
+  qc.rz(strength * target_phi * np.arccos(i* np.pi/(num_qubits-1)/2),i)
+
+thread '<unnamed>' panicked at crates/synthesis/src/two_qubit_decompose.rs:174:60:
+called `Option::unwrap()` on a `None` value
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+Traceback (most recent call last):
+  File "/Users/jsf/Documents/QuantumBrush-collab/effect/apply_effect.py", line 234, in <module>
+    success = apply_effect(data)
+              ^^^^^^^^^^^^^^^^^^
+  File "/Users/jsf/Documents/QuantumBrush-collab/effect/apply_effect.py", line 143, in apply_effect
+    new_image = effect_module.run(req)
+                ^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/jsf/Documents/QuantumBrush-collab/effect/../effect/qdrop/qdrop.py", line 124, in run
+    final_angles =  drop(initial_angles, target_angle, strength)
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/jsf/Documents/QuantumBrush-collab/effect/../effect/qdrop/qdrop.py", line 45, in drop
+    obs = utils.run_estimator(qc,ops)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/jsf/Documents/QuantumBrush-collab/effect/utils.py", line 97, in run_estimator
+    isa_circuits = [pm.run(circuits)]
+                    ^^^^^^^^^^^^^^^^
+  File "/Users/jsf/miniconda3/envs/quantumbrush/lib/python3.11/site-packages/qiskit/transpiler/passmanager.py", line 451, in run
+    return super().run(circuits, output_name, callback, num_processes=num_processes)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/jsf/miniconda3/envs/quantumbrush/lib/python3.11/site-packages/qiskit/transpiler/passmanager.py", line 474, in wrapper
+    return meth(*meth_args, **meth_kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/jsf/miniconda3/envs/quantumbrush/lib/python3.11/site-packages/qiskit/transpiler/passmanager.py", line 233, in run
+    return super().run(
+           ^^^^^^^^^^^^
+  File "/Users/jsf/miniconda3/envs/quantumbrush/lib/python3.11/site-packages/qiskit/passmanager/passmanager.py", line 237, in run
+    out = [
+          ^
+  File "/Users/jsf/miniconda3/envs/quantumbrush/lib/python3.11/site-packages/qiskit/passmanager/passmanager.py", line 238, in <listcomp>
+    _run_workflow(
+  File "/Users/jsf/miniconda3/envs/quantumbrush/lib/python3.11/site-packages/qiskit/passmanager/passmanager.py", line 312, in _run_workflow
+    passmanager_ir, final_state = flow_controller.execute(
+                                  ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/jsf/miniconda3/envs/quantumbrush/lib/python3.11/site-packages/qiskit/passmanager/base_tasks.py", line 218, in execute
+    passmanager_ir, state = next_task.execute(
+                            ^^^^^^^^^^^^^^^^^^
+  File "/Users/jsf/miniconda3/envs/quantumbrush/lib/python3.11/site-packages/qiskit/transpiler/basepasses.py", line 167, in execute
+    new_dag, state = super().execute(
+                     ^^^^^^^^^^^^^^^^
+  File "/Users/jsf/miniconda3/envs/quantumbrush/lib/python3.11/site-packages/qiskit/passmanager/base_tasks.py", line 98, in execute
+    ret = self.run(passmanager_ir)
+          ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/jsf/miniconda3/envs/quantumbrush/lib/python3.11/site-packages/qiskit/transpiler/passes/optimization/consolidate_blocks.py", line 139, in run
+    consolidate_blocks(
+pyo3_runtime.PanicException: called `Option::unwrap()` on a `None` value
+/Users/jsf/Documents/QuantumBrush-collab/effect/../effect/qdrop/qdrop.py:36: RuntimeWarning: invalid value encountered in arccos
+  qc.rz(- strength *phi * np.arccos(i* np.pi/(num_qubits-1)/2),i)
+/Users/jsf/Documents/QuantumBrush-collab/effect/../effect/qdrop/qdrop.py:37: RuntimeWarning: invalid value encountered in arccos
+  qc.ry(strength * (target_theta-theta)  * np.arccos(i* np.pi/(num_qubits-1)/2),i)
+/Users/jsf/Documents/QuantumBrush-collab/effect/../effect/qdrop/qdrop.py:38: RuntimeWarning: invalid value encountered in arccos
+  qc.rz(strength * target_phi * np.arccos(i* np.pi/(num_qubits-1)/2),i)

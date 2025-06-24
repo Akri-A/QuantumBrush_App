@@ -1,0 +1,28 @@
+{
+  "effect_success": "null",
+  "project_id": "project_1750317349436",
+  "user_input": {
+    "Radius": "20",
+    "Color": "#34809A",
+    "Alpha": "1.0"
+  },
+  "created": true,
+  "processing_status": "pending",
+  "stroke_input": {
+    "path": [[
+      1988,
+      1536
+    ]],
+    "input_location": "project/project_1750317349436/stroke/stroke_1750317563196_input.png",
+    "real_hardware": false,
+    "clicks": [[
+      1988,
+      1536
+    ]],
+    "output_location": "project/project_1750317349436/stroke/stroke_1750317563196_output.png"
+  },
+  "stroke_id": "stroke_1750317563196",
+  "effect_received": "null",
+  "effect_processed": "null",
+  "effect_id": "acrylic"
+}

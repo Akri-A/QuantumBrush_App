@@ -1,0 +1,155 @@
+{
+  "effect_success": "false",
+  "project_id": "project_1750754820176",
+  "user_input": {
+    "Radius": "20",
+    "Invert Luminosity": "true",
+    "Number of Drops": "1",
+    "Strength": "1.0"
+  },
+  "created": true,
+  "processing_status": "failed",
+  "stroke_input": {
+    "path": [
+      [
+        33,
+        1666
+      ],
+      [
+        33,
+        1670
+      ],
+      [
+        33,
+        1673
+      ],
+      [
+        36,
+        1673
+      ],
+      [
+        36,
+        1676
+      ],
+      [
+        36,
+        1679
+      ],
+      [
+        36,
+        1683
+      ],
+      [
+        36,
+        1686
+      ],
+      [
+        36,
+        1689
+      ],
+      [
+        36,
+        1693
+      ],
+      [
+        36,
+        1696
+      ],
+      [
+        36,
+        1699
+      ],
+      [
+        33,
+        1699
+      ],
+      [
+        33,
+        1702
+      ],
+      [
+        33,
+        1706
+      ],
+      [
+        33,
+        1709
+      ],
+      [
+        33,
+        1712
+      ],
+      [
+        33,
+        1715
+      ],
+      [
+        29,
+        1719
+      ],
+      [
+        29,
+        1722
+      ],
+      [
+        29,
+        1725
+      ],
+      [
+        29,
+        1728
+      ],
+      [
+        29,
+        1732
+      ],
+      [
+        29,
+        1735
+      ],
+      [
+        29,
+        1738
+      ],
+      [
+        29,
+        1741
+      ],
+      [
+        29,
+        1745
+      ],
+      [
+        29,
+        1748
+      ],
+      [
+        29,
+        1751
+      ],
+      [
+        29,
+        1754
+      ],
+      [
+        29,
+        1758
+      ],
+      [
+        29,
+        1761
+      ]
+    ],
+    "input_location": "project/project_1750754820176/stroke/stroke_1750754846401_input.png",
+    "real_hardware": false,
+    "clicks": [[
+      33,
+      1666
+    ]],
+    "output_location": "project/project_1750754820176/stroke/stroke_1750754846401_output.png"
+  },
+  "stroke_id": "stroke_1750754846401",
+  "effect_received": "true",
+  "effect_processed": "true",
+  "effect_id": "damping"
+}

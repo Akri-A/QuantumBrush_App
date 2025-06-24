@@ -1,0 +1,167 @@
+{
+  "effect_success": "true",
+  "project_id": "project_1750750997399",
+  "user_input": {
+    "Radius": "20",
+    "Invert Luminosity": "false",
+    "Number of Drops": "15",
+    "Strength": "0.083"
+  },
+  "created": true,
+  "processing_status": "completed",
+  "stroke_input": {
+    "path": [
+      [
+        352,
+        98
+      ],
+      [
+        352,
+        98
+      ],
+      [
+        352,
+        98
+      ],
+      [
+        356,
+        98
+      ],
+      [
+        361,
+        98
+      ],
+      [
+        372,
+        98
+      ],
+      [
+        389,
+        97
+      ],
+      [
+        410,
+        94
+      ],
+      [
+        434,
+        93
+      ],
+      [
+        459,
+        93
+      ],
+      [
+        483,
+        93
+      ],
+      [
+        503,
+        93
+      ],
+      [
+        521,
+        93
+      ],
+      [
+        537,
+        93
+      ],
+      [
+        551,
+        93
+      ],
+      [
+        561,
+        93
+      ],
+      [
+        569,
+        93
+      ],
+      [
+        577,
+        93
+      ],
+      [
+        582,
+        93
+      ],
+      [
+        587,
+        93
+      ],
+      [
+        593,
+        91
+      ],
+      [
+        600,
+        89
+      ],
+      [
+        608,
+        88
+      ],
+      [
+        614,
+        85
+      ],
+      [
+        620,
+        84
+      ],
+      [
+        626,
+        83
+      ],
+      [
+        629,
+        83
+      ],
+      [
+        632,
+        82
+      ],
+      [
+        634,
+        82
+      ],
+      [
+        637,
+        81
+      ],
+      [
+        638,
+        81
+      ],
+      [
+        639,
+        81
+      ],
+      [
+        639,
+        81
+      ],
+      [
+        639,
+        80
+      ],
+      [
+        639,
+        80
+      ]
+    ],
+    "input_location": "project/project_1750750997399/stroke/stroke_1750753286472_input.png",
+    "real_hardware": false,
+    "clicks": [[
+      352,
+      98
+    ]],
+    "output_location": "project/project_1750750997399/stroke/stroke_1750753286472_output.png"
+  },
+  "stroke_id": "stroke_1750753286472",
+  "effect_received": "true",
+  "effect_processed": "true",
+  "effect_id": "damping"
+}

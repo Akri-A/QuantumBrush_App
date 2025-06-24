@@ -1,0 +1,77 @@
+{
+  "effect_success": "true",
+  "project_id": "project_1750332558742",
+  "user_input": {
+    "Radius": "5",
+    "Lightness": "0.5",
+    "Saturation": "0.5",
+    "Strength": "0.5"
+  },
+  "created": true,
+  "processing_status": "completed",
+  "stroke_input": {
+    "path": [
+      [
+        80,
+        199
+      ],
+      [
+        373,
+        74
+      ],
+      [
+        387,
+        97
+      ],
+      [
+        394,
+        119
+      ],
+      [
+        394,
+        136
+      ],
+      [
+        752,
+        103
+      ],
+      [
+        752,
+        102
+      ]
+    ],
+    "input_location": "project/project_1750332558742/stroke/stroke_1750337514046_input.png",
+    "real_hardware": false,
+    "clicks": [
+      [
+        80,
+        199
+      ],
+      [
+        373,
+        74
+      ],
+      [
+        387,
+        97
+      ],
+      [
+        394,
+        119
+      ],
+      [
+        394,
+        136
+      ],
+      [
+        752,
+        103
+      ]
+    ],
+    "output_location": "project/project_1750332558742/stroke/stroke_1750337514046_output.png"
+  },
+  "stroke_id": "stroke_1750337514046",
+  "effect_received": "true",
+  "effect_processed": "true",
+  "effect_id": "heisenbrush"
+}
