@@ -39,9 +39,14 @@ def drop(initial_angles, target_angle,strength):
 
         if num_qubits > 1:
             qc.ry(np.pi/(num_qubits-1), num_qubits)
-
-
-    ops = [SparsePauliOp(Pauli('I'*(num_qubits-i) + p + 'I'*i)) for p in ['X','Y','Z']  for i in range(num_qubits) ]
+            
+    # Compute entanglement entropy after tracing out the last qubit
+    if False:
+        state = Statevector(qc)
+        reduced_state = partial_trace(state, [num_qubits])  # trace out the last (ancilla/control) qubit
+        nt = entropy(reduced_state)
+        print("Entanglement entropy (tracing out control qubit):", ent)
+        ops = [SparsePauliOp(Pauli('I'*(num_qubits-i) + p + 'I'*i)) for p in ['X','Y','Z']  for i in range(num_qubits) ]
 
     obs = utils.run_estimator(qc,ops)
 

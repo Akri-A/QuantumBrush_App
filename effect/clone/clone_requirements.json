@@ -1,9 +1,9 @@
 {
     "name": "Quantum Clone",
-    "id": "clone", 
+    "id": "clone",
     "author": "Joao",
     "version": "1.0.0",
-    "description": "This effect will try to clone the first region clicked onto the other clicks but due to the no-cloning theorem, the copy will never be perfect. To use it, click and drag on the canvas to determine the copy region and click again to determine the paste region.",
+    "description": "This effect will try to clone the first region clicked onto the other clicks but due to the no-cloning theorem, the copy will never be perfect. To use it, click and drag on the canvas to determine the copy region and click again to determine the paste region.\nThere can only be 2 clicks on the image, not more, not less.\nThe strength controls the fidelity of the copied region.\n - strength=0 -> zero fidelity of the copy, maximum fidelity of the paste\n - strength=1 -> maximum fidelity of the copy, zero fidelity of the paste",
     "dependencies": {
         "numpy": ">=2.1.0",
         "qiskit": ""
@@ -13,7 +13,7 @@
             "type": "float",
             "min": 0.0,
             "max": 1.0,
-            "default": 0.33 
+            "default": 0.33
         }
     },
     "stroke_input": {
@@ -21,6 +21,5 @@
         "clicks": "array",
         "path": "array"
     },
-    "flags": {
-    }
+    "flags": {}
 }

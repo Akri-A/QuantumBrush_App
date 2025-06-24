@@ -3,7 +3,7 @@
     "id": "damping", 
     "author": "Joao",
     "version": "1.0.0",
-    "description": "Each groups of pixel get encoded as a qubit undergoing an amplitude damping circuit.",
+    "description": "Pixels are encoded as qubits with amplitude damping; click and drag to select the region.\nRadius: brush size.\nNumber of Drops: number of color segments.\nStrength: effect intensity.\nInvert Luminosity: pushes segments toward white.",
     "dependencies": {
         "numpy": ">=2.1.0",
         "colorsys": "",
@@ -12,8 +12,8 @@
     "user_input": {
         "Number of Drops": {
             "type": "int",
-            "min": 0,
-            "max": 10,
+            "min": 2,
+            "max": 15,
             "default": 5 
         },
         "Radius": {
