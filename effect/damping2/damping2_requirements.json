@@ -1,21 +1,15 @@
 {
-    "name": "Damping",
-    "id": "damping", 
+    "name": "QDamp",
+    "id": "damping2", 
     "author": "Joao",
     "version": "1.0.0",
-    "description": "Pixels are encoded as qubits with amplitude damping; click and drag to select the region.\nRadius: brush size.\nNumber of Drops: number of color segments.\nStrength: effect intensity.\nInvert Luminosity: pushes segments toward white.",
+    "description": "This brush applies sort of an amplitude damping to each segment. Once can create multiple segments by clicking and draging multiple times (no more than 20 times).\nRadius: brush size.\nStrength: effect intensity.\nInvert Luminosity: pushes segments toward white.",
     "dependencies": {
         "numpy": ">=2.1.0",
         "colorsys": "",
         "qiskit": ""
     },
     "user_input": {
-        "Number of Drops": {
-            "type": "int",
-            "min": 2,
-            "max": 15,
-            "default": 5 
-        },
         "Radius": {
             "type": "int",
             "min": 0,
@@ -39,6 +33,6 @@
         "clicks": "array"
     },
     "flags": {
-        "smooth_path": true
+        "smooth_path": false
     }
 }
