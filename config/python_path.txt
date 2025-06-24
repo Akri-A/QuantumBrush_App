@@ -1,1 +1,1 @@
-/Users/astrydpark/miniconda3/bin/python3.12
+/Users/astrydpark/miniconda3/envs/quantumbrush/bin/python3.11
