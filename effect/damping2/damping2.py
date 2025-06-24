@@ -77,17 +77,26 @@ def run(params):
     width = image.shape[1]
 
     path = params["stroke_input"]["path"]
+    clicks = params["stroke_input"]["clicks"]
+    assert len(clicks) < 20, "There can be no more than 20 clicks in a stroke"
 
-    n_drops = params["user_input"]["Number of Drops"]
-    assert n_drops > 1, "Number of drops must be greater than 1"
+    n_drops = len(clicks)
 
-    # Split a path into n_drops smaller paths
-    path_length = len(path)
-    assert path_length > n_drops, "The number of pixels in the stroke must be bigger than the number of drops"
+    split_paths = []
+    # Split path into subpaths, each starting with a click
+    click_indices = []
+    c = 0
+    for i, p in enumerate(path):
+        if np.all(p == clicks[c]):
+            click_indices.append(i)
+            c += 1
+            if c >= n_drops:
+                break
 
-    split_size = max(1, path_length // n_drops)
-    split_paths = [path[i * split_size : (i + 1) * split_size] for i in range(n_drops - 1)]
-    split_paths.append(path[(n_drops - 1) * split_size :])
+    for idx, start in enumerate(click_indices):
+        end = click_indices[idx + 1] if idx + 1 < len(click_indices) else len(path)
+        interp_path = utils.interpolate_pixels(path[start:end])
+        split_paths.append(interp_path)
 
     # Get the radius of the drop
     radius = params["user_input"]["Radius"]
