@@ -72,7 +72,24 @@ def points_within_lasso(points,border = None):
 
     return result
 
+def split_path_from_clicks(path,clicks):
+    split_paths = []
+    # Split path into subpaths, each starting with a click
+    click_indices = []
+    c = 0
+    for i, p in enumerate(path):
+        if np.all(p == clicks[c]):
+            click_indices.append(i)
+            c += 1
+            if c >= len(clicks):
+                break
 
+    for idx, start in enumerate(click_indices):
+        end = click_indices[idx + 1] if idx + 1 < len(click_indices) else len(path)
+        interp_path = interpolate_pixels(path[start:end])
+        split_paths.append(interp_path)
+    
+    return split_paths
 
 def run_estimator(circuits, operators, backend=None, options = None):
     '''Runs the estimator on the provided circuits and operators.

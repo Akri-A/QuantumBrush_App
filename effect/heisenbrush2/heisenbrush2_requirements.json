@@ -1,0 +1,48 @@
+{
+    "name": "Heisenbrush",
+    "id": "heisenbrush2",
+    "author": "Arianna",
+    "version": "1.0.0",
+    "description": "To use this effect, click and drag on the canvas to create up to 10 strokes.\nThis applies quantum-inspired color effects using a Heisenberg model simulation. The brush creates entangled color patterns where each stroke segment affects others through quantum simulation, producing unique color variations based on path dynamics and quantum hardware simulation.",
+    "dependencies": {
+        "numpy": ">=2.1.0",
+        "colorsys": "",
+        "qiskit": ">=1.0.0",
+        "qiskit_ibm_runtime": ">=0.20.0",
+        "qiskit_aer": ">=0.17.0"
+    },
+    "user_input": {
+        "Radius": {
+            "type": "int",
+            "min": 1,
+            "max": 50,
+            "default": 5
+        },
+        "Strength": {
+            "type": "float",
+            "min": 0.0,
+            "max": 1.0,
+            "default": 0.5
+        },
+        "Saturation": {
+            "type": "float",
+            "min": 0.0,
+            "max": 1.0,
+            "default": 0.5
+        },
+        "Lightness": {
+            "type": "float",
+            "min": 0.0,
+            "max": 1.0,
+            "default": 0.5
+        }
+    },
+    "stroke_input": {
+        "image_rgba": "array",
+        "path": "array",
+        "clicks": "array"
+    },
+    "flags": {
+        "smooth_path": false
+    }
+}
