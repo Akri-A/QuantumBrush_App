@@ -190,23 +190,9 @@ def run(params):
     lightness = params["user_input"]["Lightness"]
     assert lightness >= 0 and lightness <= 1, "Lightness must be between 0 and 1"
 
-    # Calculate distances between consecutive points in the path
-    distances = []
-    for i in range(1, len(path)):
-        prev_point = np.array(path[i-1])
-        curr_point = np.array(path[i])
-        dist = np.linalg.norm(curr_point - prev_point)
-        distances.append(dist)
-    print(distances)
-    if len(distances) == 0:
-        distances = [0.1]  # Default distance if path is too short
-
-    # Normalize distances
-    max_dist = max(distances) if distances else 1.0
-    normalized_distances = [ strength * d / max_dist for d in distances]
-
-    normalized_distances=normalized_distances[:30] if len(normalized_distances) > 30 else normalized_distances #TODO: notice the fixed distances for time evolution
-
+    
+    normalized_distances = [strength] * int(max(2,min(len(path)/radius/4, 10)))
+    print(normalized_distances)
     # Run Heisenberg simulation to get colors
     heisenberg_colors = run_heisenberg_hardware(normalized_distances, saturation, lightness, radius)
     # print(f"Generated {len(heisenberg_colors)} Heisenberg colors")
