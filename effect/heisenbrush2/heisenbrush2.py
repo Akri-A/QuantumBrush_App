@@ -9,7 +9,7 @@ utils = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(utils)
 
 
-def scale_to_range(x, in_min=1, in_max=50, out_min=2, out_max=20):
+def scale_to_range(x, in_min=1, in_max=100, out_min=2, out_max=10):
     """
     Linearly scale x from [in_min, in_max] to [out_min, out_max].
     """

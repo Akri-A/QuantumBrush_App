@@ -9,7 +9,7 @@ utils = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(utils)
 
 
-def scale_to_range(x, in_min=1, in_max=50, out_min=2, out_max=20):
+def scale_to_range(x, in_min=1, in_max=100, out_min=2, out_max=10):
     """
     Linearly scale x from [in_min, in_max] to [out_min, out_max].
     """
@@ -190,7 +190,7 @@ def run(params):
     lightness = params["user_input"]["Lightness"]
     assert lightness >= 0 and lightness <= 1, "Lightness must be between 0 and 1"
 
-    
+
     normalized_distances = [strength] * int(max(2,min(len(path)/radius/4, 10)))
     print(normalized_distances)
     # Run Heisenberg simulation to get colors
