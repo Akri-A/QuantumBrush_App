@@ -1,20 +1,3 @@
-<<<<<<< Updated upstream
-# Quantum Brush (version: Processing (Java))
-
-- Format: Standalone Processing (Java) application
-- Supported:
-  
-      ```
-      (base) astrydpark@Astryds-MacBook-Pro ~ % java -version
-          openjdk version "21.0.7" 2025-04-15 LTS
-          OpenJDK Runtime Environment Temurin-21.0.7+6 (build 21.0.7+6-LTS)
-          OpenJDK 64-Bit Server VM Temurin-21.0.7+6 (build 21.0.7+6-LTS, mixed mode, sharing)
-      ```
-
-Project location: `../QuantumBrush`
-
-IDE version: Eclipse 2025-03
-=======
 # Quantum Brush
 
 🔍 Hello! I am a creative image modification tool powered by quantum computing.
