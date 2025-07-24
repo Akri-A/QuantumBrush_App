@@ -8,10 +8,10 @@
 👩🏻‍💻 Author: MOTH Quantum, built with ❤️ by [Astryd Park](https://www.github.com/artreadcode)
 
 📋 Contents
-1. [Usage Instructions]
-2. [Installation Instructions]
-3. [Examples]
-4. [Technical Stack]
+1. [Usage Instruction](https://github.com/moth-quantum/quantum-brush-collab?tab=readme-ov-file#usage-instruction)
+2. [Installation Instruction](https://github.com/moth-quantum/quantum-brush-collab?tab=readme-ov-file#instllation-instruction)
+3. [Examples](https://github.com/moth-quantum/quantum-brush-collab?tab=readme-ov-file#examples)
+4. [Technical Stack](https://github.com/moth-quantum/quantum-brush-collab?tab=readme-ov-file#technical-stack)
 
 ## Usage Instruction
 
