@@ -15,56 +15,16 @@ def scale_to_range(x, in_min=1, in_max=100, out_min=2, out_max=10):
     """
     if not (in_min <= x <= in_max):
         raise ValueError(f"Input {x} is out of range [{in_min}, {in_max}]")
-    return int(round(out_min + (x - in_min) * (out_max - out_min) / (in_max - in_min)))
+    return int(round(out_min + (x - in_min) * (out_max - out_min) / (in_max - in_min))) if in_max<100 else 10
 
 
-def create_heisenberg_hamiltonian(n_qubits: int, J_list: list, hz_list: list, hx_list: list):
-    """
-    Create a periodic boundary Heisenberg model Hamiltonian as a SparsePauliOp.
-
-    Args:
-        n_qubits (int): Number of qubits (spins) in the chain
-        J_list (list): List of coupling constants for each nearest neighbor
-        hz_list: local Z field for each qubit
-        hx_list: local X field for each qubit
-
-    Returns:
-        SparsePauliOp: The Heisenberg Hamiltonian as a sparse Pauli operator
-    """
-
-
-    pauli_strings = []
-    coefficients = []
-
-    for i in range(n_qubits - 1):
-        J = J_list[i]
-
-        for pauli in ['X', 'Y', 'Z']:
-            # Create interaction between qubits i and j
-            paulistr = ['I'] * n_qubits
-            paulistr[i] = paulistr[i+1] = pauli
-            pauli_strings.append(''.join(paulistr))
-            coefficients.append(J)
-
-    # Add periodic boundary condition
-    if n_qubits > 2:
-        for pauli in ['X', 'Y', 'Z']:
-            paulistr = ['I'] * n_qubits
-            paulistr[0] = pauli
-            paulistr[n_qubits-1] = pauli
-            pauli_strings.append(''.join(paulistr))
-            coefficients.append(J_list[-1])
-
-    # Add local fields X, Z
-    for i in range(n_qubits):
-        for pauli, hlist in zip(['X', 'Z'], [hx_list, hz_list]):
-            paulistr = ['I'] * n_qubits
-            paulistr[i] = pauli
-            pauli_strings.append(''.join(paulistr))
-            coefficients.append(hlist[i])
-
-    # Create the SparsePauliOp
-    return SparsePauliOp(pauli_strings, coefficients)
+def get_mean_magnetization(n_qubits:int):
+    z_pauli = []
+    for site in range(n_qubits):
+        z_op = ['I'] * n_qubits
+        z_op[site] = 'Z'
+        z_pauli.append(''.join(z_op))
+    return SparsePauliOp(z_pauli)/n_qubits
 
 def time_evolution_Heisenberg(n_qubits: int, J_list: list, hz_list: list, hx_list: list, dt: float) -> QuantumCircuit:
     """Time evolution circuit for the Heisenberg model with periodic boundary conditions
@@ -100,7 +60,7 @@ def time_evolution_Heisenberg(n_qubits: int, J_list: list, hz_list: list, hx_lis
 
     return circ_dt
 
-def run_heisenberg_hardware(dt_list,saturation, lightness, radius):
+def run_heisenberg_hardware(dt_list, hue, saturation, lightness, radius, phi, theta):
     """
     Run Heisenberg model simulation on quantum hardware simulator.
 
@@ -121,6 +81,13 @@ def run_heisenberg_hardware(dt_list,saturation, lightness, radius):
 
         circuits=[]
         circ = QuantumCircuit(n_qubits)
+        #Create initial state with rotations of phi,theta for each qubit
+        initial_angles = [(phi, theta)] * n_qubits  # All qubits start with the same angles
+        for i, (phi, theta) in enumerate(initial_angles):
+            circ.ry(theta, i)
+            circ.rz(phi, i)
+
+
         ### start time evolution
         for step,dt in zip(range(nsteps),dt_list):
             print(f"J_list: {J_list}, hz_list: {hz_list}, hx_list: {hx_list}, dt: {dt}")
@@ -128,25 +95,31 @@ def run_heisenberg_hardware(dt_list,saturation, lightness, radius):
             circ = circ.compose(circ_dt)
             circuits.append(circ.copy())
 
-        # Create the Hamiltonian
-        hamiltonian = create_heisenberg_hamiltonian(n_qubits, J_list, hz_list, hx_list)
-        observables = hamiltonian
+
+        observables = get_mean_magnetization(n_qubits)
 
         # Run the estimator
         values=utils.run_estimator(circuits, observables, backend=None)
 
         values=np.array([val[0] for val in values])
 
+        print(f"Values: {values}")
 
-        # Normalize to [0, 1]
-        vmin, vmax = values.min(), values.max()
-        normalized = (values - vmin) / (vmax - vmin)
+
+        # Ensure values wrap around [0, 1] using modulo for circular behavior
+        new_hue = (hue + values) % 1.0
+        new_lightness = (lightness + values) % 1.0
+        new_saturation = (saturation + values) % 1.0
 
         # Map normalized values to HSL-based RGB
         color_results = [
-            tuple(int(round(c * 255)) for c in colorsys.hls_to_rgb(float(h),lightness,  saturation))
-            for h in normalized
+            tuple(int(round(c * 255)) for c in colorsys.hls_to_rgb(float(new_hue[i]), new_lightness[i], new_saturation[i]))
+            for i in range(len(new_hue))
         ]
+
+        print(f"old hue: {hue}, old lightness: {lightness}, old saturation: {saturation}")
+        print(f"new hue: {new_hue}, new lightness: {new_lightness}, new saturation: {new_saturation}")
+        print(f"Generated new colors: {color_results}")
 
         return color_results
 
@@ -181,20 +154,29 @@ def run(params):
     radius = params["user_input"]["Radius"]
     assert radius > 0, "Radius must be greater than 0"
 
+    color = params["user_input"]["Color"]
+    print(f"Using color: {color}")
+    assert len(color) == 3, "Color must be RGB format"
+
+    from scipy.stats import circmean
+
+    rgb = np.array(color, dtype=np.float32) / 255.0
+    rcolor, gcolor, bcolor = rgb
+    hue, lightness, saturation = colorsys.rgb_to_hls(rcolor, gcolor, bcolor)
+
+    # Convert hue to radians and lightness to a fraction
+    phi = circmean([2 * np.pi * hue]) #phi: computes the circular mean of hue, scaled from [0,1] to [0, 2π].
+    theta = np.pi * lightness #theta: computes the linear mean of lightness (L channel), scaled from [0,1] to [0, π].
+    print(f"Using angles: phi={phi}, theta={theta}")
+
     strength = params["user_input"]["Strength"]
     assert strength > 0, "Strength must be greater than 0"
 
-    saturation = params["user_input"]["Saturation"]
-    assert saturation >= 0 and saturation <= 1, "Saturation must be between 0 and 1"
 
-    lightness = params["user_input"]["Lightness"]
-    assert lightness >= 0 and lightness <= 1, "Lightness must be between 0 and 1"
-
-
-    normalized_distances = [strength] * int(max(2,min(len(path)/radius/4, 10)))
+    normalized_distances = [0.1] * int(max(2,min(len(path)/radius/4, 10))) #dt*path_length
     print(normalized_distances)
     # Run Heisenberg simulation to get colors
-    heisenberg_colors = run_heisenberg_hardware(normalized_distances, saturation, lightness, radius)
+    heisenberg_colors = run_heisenberg_hardware(normalized_distances,hue, saturation, lightness, radius, phi, theta)
     # print(f"Generated {len(heisenberg_colors)} Heisenberg colors")
 
     # Interpolate the path to get all pixels
@@ -217,12 +199,13 @@ def run(params):
         for rx, ry in region:
             if 0 <= rx < height and 0 <= ry < width:
                 # Blend the new color with the original
-                original = image[rx, ry, :3].astype(np.float32)
+                original = np.array(params["user_input"]["Color"], dtype=np.float32)
                 new_color = np.array(color, dtype=np.float32)
 
                 # Apply blending based on strength
                 blended = (1 - strength) * original + strength * new_color
                 image[rx, ry, :3] = np.clip(blended, 0, 255).astype(np.uint8)
+                # image[rx, ry, :3] = np.clip(original, 0, 255).astype(np.uint8)
 
     print("Heisenberg effect applied successfully")
     return image

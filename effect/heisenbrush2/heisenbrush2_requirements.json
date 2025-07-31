@@ -3,7 +3,7 @@
     "id": "heisenbrush2",
     "author": "Arianna",
     "version": "1.0.0",
-    "description": "To use this effect, click and drag on the canvas to create up to 10 strokes.\nThis applies quantum-inspired color effects using a Heisenberg model simulation. The brush creates entangled color patterns where each stroke segment affects others through quantum simulation, producing unique color variations based on path dynamics and quantum hardware simulation.",
+    "description": "This brush simulates a quantum system to generate color effects based on the Heisenberg spin model. Each stroke is composed of discrete segments (defined by user clicks), and each segment drives a quantum time evolution that computes the system’s mean magnetization. This magnetization is used to shift the original color’s Hue, Lightness, and Saturation, creating unique color changes for each stroke segment.\n\nThe quantum algorithm models interactions between spins in a closed loop of qubits. Your base color is translated into a quantum state using angular coordinates, then evolves over time steps determined by stroke geometry. Each segment produces a magnetization value, which is mapped back into HSL color space.\n\nThe Strength setting controls how much influence the quantum-generated colors have on the final result. A low strength blends more of your original color, while high strength allows the quantum behavior to fully shape the effect.\n\nEach segment is rendered with its own color derived from quantum simulation, giving your brushwork a discrete, physics-inspired variation along the stroke.\n\n To use this effect, click and drag on the canvas to create up to 10 strokes.",
     "dependencies": {
         "numpy": ">=2.1.0",
         "colorsys": "",
@@ -24,17 +24,9 @@
             "max": 1.0,
             "default": 0.5
         },
-        "Saturation": {
-            "type": "float",
-            "min": 0.0,
-            "max": 1.0,
-            "default": 0.5
-        },
-        "Lightness": {
-            "type": "float",
-            "min": 0.0,
-            "max": 1.0,
-            "default": 0.5
+        "Color": {
+            "type": "color",
+            "default": "#FF0000"
         }
     },
     "stroke_input": {
