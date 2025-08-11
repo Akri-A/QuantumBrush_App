@@ -65,6 +65,7 @@ Quantum Brush is basically a graphics software powered by quantum-computing-imag
 9. After it install the program, you can choose whether the installer will set up the environment for you or not. Just press *y* for peaceful mind.
 
 ## (c.f.) Update Instructions
+
 	You don't need to download another installation file. You can just simply browse through the `$HOME/quantumbrush` folder, and repeat the number 3-8 on the Terminal window, only for `update.sh` file this time!
 
 # Examples
