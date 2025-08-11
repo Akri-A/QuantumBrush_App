@@ -9,7 +9,7 @@
 
 📋 Contents
 1. [Usage Instruction](https://github.com/moth-quantum/quantum-brush-collab?tab=readme-ov-file#usage-instruction)
-2. [Installation Instruction](https://github.com/moth-quantum/quantum-brush-collab?tab=readme-ov-file#instllation-instruction)
+2. [Installation Instruction](https://github.com/moth-quantum/quantum-brush-collab?tab=readme-ov-file#installation-instruction)
 3. [Examples](https://github.com/moth-quantum/quantum-brush-collab?tab=readme-ov-file#examples)
 4. [Technical Stack](https://github.com/moth-quantum/quantum-brush-collab?tab=readme-ov-file#technical-stack)
 
