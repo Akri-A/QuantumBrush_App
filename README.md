@@ -1,5 +1,3 @@
-# Quantum Brush
-
 🔍 Hello! I am a creative image modification tool powered by quantum computing.
 - Brush collection powered by quantum algorithms.
 - Lightweight program which supports quantum simulation and hardware communication both.
@@ -17,7 +15,7 @@
 
 ---
 
-## Usage Instruction
+# Usage Instruction
 This application is tested with MacOS Sequoia (15.5) && Eclipse IDE (2025-03) && Python 3.11+ && OpenJDK 21.0.7 LTS. Technically, the application must support every machines (Windows, Linux and MacOS) with the suitable Java and Python versions. It requires OpenJDK and Python to execute, so they must be previously installed.
 
 However, Luckily, the installer provides automatic OpenJDK + Python installation through `miniconda` thus you actually don’t need to do anything! `install.sh` creates condo environment `’quantumbrush’` and store all necessary libraries there. More of this is described under [Installation Instructions](https://github.com/moth-quantum/quantum-brush-collab?tab=readme-ov-file#instllation-instruction).
@@ -50,7 +48,7 @@ Quantum Brush is basically a graphics software powered by quantum-computing-imag
 ![The image of Stoke Manager](https://private-user-images.githubusercontent.com/50163676/476522241-00e21b8c-9c0c-4f1c-b98c-9866d594af2a.png?jwt=eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJnaXRodWIuY29tIiwiYXVkIjoicmF3LmdpdGh1YnVzZXJjb250ZW50LmNvbSIsImtleSI6ImtleTUiLCJleHAiOjE3NTQ5MTk3MjgsIm5iZiI6MTc1NDkxOTQyOCwicGF0aCI6Ii81MDE2MzY3Ni80NzY1MjIyNDEtMDBlMjFiOGMtOWMwYy00ZjFjLWI5OGMtOTg2NmQ1OTRhZjJhLnBuZz9YLUFtei1BbGdvcml0aG09QVdTNC1ITUFDLVNIQTI1NiZYLUFtei1DcmVkZW50aWFsPUFLSUFWQ09EWUxTQTUzUFFLNFpBJTJGMjAyNTA4MTElMkZ1cy1lYXN0LTElMkZzMyUyRmF3czRfcmVxdWVzdCZYLUFtei1EYXRlPTIwMjUwODExVDEzMzcwOFomWC1BbXotRXhwaXJlcz0zMDAmWC1BbXotU2lnbmF0dXJlPTRmNmEzYzU0NjVjODQ0MTMxOGU5YTIyZGRhYWIxYWIzY2FkMjBjOTZmOTlkMDczYzNmMmY1ZWNiNDcwMDJjZDUmWC1BbXotU2lnbmVkSGVhZGVycz1ob3N0In0.55Byb2YnKPhIbjeZPfN7PAZuwUvmgAofutAbOq7mjbw)
 	Here, you can see the list of ’strokes’ that you created. You can change the timeline of them, for example, run the stroke on the simulator 
 
-## Installation Instructions
+# Installation Instructions
 1. Look at the Release Tab right next to you.
 2. Click the latest release version.
 3. Click `install.sh` to download.
@@ -64,16 +62,16 @@ Quantum Brush is basically a graphics software powered by quantum-computing-imag
 
 9. After it install the program, you can choose whether the installer will set up the environment for you or not. Just press *y* for peaceful mind.
 
-### (c.f.) Update Instructions
+## (c.f.) Update Instructions
 	You don't need to download another installation file. You can just simply browse through the `$HOME/quantumbrush` folder, and repeat the number 3-8 on the Terminal window, only for `update.sh` file this time!
 
-## Examples
+# Examples
 
 	You can see the tech-savvy details on our paper and understand deeply about quantum-powered creativity!
     
 - Link: {LINK WILL BE ADDED}
 
-## Technical Stack
+# Technical Stack
 
 - Format: Standalone Processing (Java) application for multiple OS
 - Supported:
