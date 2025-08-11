@@ -60,13 +60,10 @@ Quantum Brush is basically a graphics software powered by quantum-computing-imag
 7. Drag `install.sh` from the Finder window and drop it on the Terminal window. You might see some weird path name is added next to `sh `. (e.g. `sh /astrydpark/download/install.sh`).
 8. Press Enter and follow the instructions on the Terminal window.
    
-	e.g. If the installer asks `{...}? (Y/y)`, you can press *y* and Enter!
+	e.g. If the installer shows `{someQuestion}? (Y/y)`, you can press `y` and Enter!
 
-9. After it install the program, you can choose whether the installer will set up the environment for you or not. Just press *y* for peaceful mind.
-
-## (c.f.) Update Instructions
-
-	You don't need to download another installation file. You can just simply browse through the `$HOME/quantumbrush` folder, and repeat the number 3-8 on the Terminal window, only for `update.sh` file this time!
+9. After it install the program, you can choose whether the installer will set up the environment for you or not. Just press `y` for peaceful mind.
+10. For the update, you don't need to download another installation file. You can just simply browse through the `HOME/quantumbrush` folder, and repeat the number 3-8 on the Terminal window, only for `update.sh` file this time!
 
 # Examples
 
@@ -74,7 +71,6 @@ Quantum Brush is basically a graphics software powered by quantum-computing-imag
 
 ![Example of Quantum Brush](https://private-user-images.githubusercontent.com/50163676/476522263-ea0f6bca-44ea-4cec-b8a0-cebab87d073d.png?jwt=eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJnaXRodWIuY29tIiwiYXVkIjoicmF3LmdpdGh1YnVzZXJjb250ZW50LmNvbSIsImtleSI6ImtleTUiLCJleHAiOjE3NTQ5MjQ4NTksIm5iZiI6MTc1NDkyNDU1OSwicGF0aCI6Ii81MDE2MzY3Ni80NzY1MjIyNjMtZWEwZjZiY2EtNDRlYS00Y2VjLWI4YTAtY2ViYWI4N2QwNzNkLnBuZz9YLUFtei1BbGdvcml0aG09QVdTNC1ITUFDLVNIQTI1NiZYLUFtei1DcmVkZW50aWFsPUFLSUFWQ09EWUxTQTUzUFFLNFpBJTJGMjAyNTA4MTElMkZ1cy1lYXN0LTElMkZzMyUyRmF3czRfcmVxdWVzdCZYLUFtei1EYXRlPTIwMjUwODExVDE1MDIzOVomWC1BbXotRXhwaXJlcz0zMDAmWC1BbXotU2lnbmF0dXJlPWJiYmFiYzA3NjUzMzc1N2ZkNTgzOTg1MmVhY2E1MmE2NjU4YzY2MGNkYzk4MDU3YTk1NGNlNzI4NWMyNDBmNjYmWC1BbXotU2lnbmVkSGVhZGVycz1ob3N0In0.cVYDtI4bV6Kv-ZSSvnJ5378btgHJ70jo_NShlJz_YY0)
 c.f. Image credit: [Pavilion by the Lake](https://www.metmuseum.org/art/collection/search/40429)
-
 	You can see the tech-savvy details on our paper and understand deeply about quantum-powered creativity!
     
 - Link: {LINK WILL BE ADDED}
