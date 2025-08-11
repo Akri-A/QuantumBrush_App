@@ -46,7 +46,9 @@ Quantum Brush is basically a graphics software powered by quantum-computing-imag
 	Open up Stroke Manager from *Tools* on the menu bar.
 
 ![The image of Stoke Manager](https://private-user-images.githubusercontent.com/50163676/476522241-00e21b8c-9c0c-4f1c-b98c-9866d594af2a.png?jwt=eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJnaXRodWIuY29tIiwiYXVkIjoicmF3LmdpdGh1YnVzZXJjb250ZW50LmNvbSIsImtleSI6ImtleTUiLCJleHAiOjE3NTQ5MTk3MjgsIm5iZiI6MTc1NDkxOTQyOCwicGF0aCI6Ii81MDE2MzY3Ni80NzY1MjIyNDEtMDBlMjFiOGMtOWMwYy00ZjFjLWI5OGMtOTg2NmQ1OTRhZjJhLnBuZz9YLUFtei1BbGdvcml0aG09QVdTNC1ITUFDLVNIQTI1NiZYLUFtei1DcmVkZW50aWFsPUFLSUFWQ09EWUxTQTUzUFFLNFpBJTJGMjAyNTA4MTElMkZ1cy1lYXN0LTElMkZzMyUyRmF3czRfcmVxdWVzdCZYLUFtei1EYXRlPTIwMjUwODExVDEzMzcwOFomWC1BbXotRXhwaXJlcz0zMDAmWC1BbXotU2lnbmF0dXJlPTRmNmEzYzU0NjVjODQ0MTMxOGU5YTIyZGRhYWIxYWIzY2FkMjBjOTZmOTlkMDczYzNmMmY1ZWNiNDcwMDJjZDUmWC1BbXotU2lnbmVkSGVhZGVycz1ob3N0In0.55Byb2YnKPhIbjeZPfN7PAZuwUvmgAofutAbOq7mjbw)
-	Here, you can see the list of ’strokes’ that you created. You can change the timeline of them, for example, run the stroke on the simulator 
+	Here, you can see the list of ’strokes’ that you created. You can change the timeline of them, for example, run the recent stroke on the simulator than the old one.
+
+    When you click 'Run', Python process will run in the background. You can close the window and come back to actually apply the processed result on the divided section. If the result is satisfactory, press the 'Apply to Canvas' button.
 
 # Installation Instructions
 1. Look at the Release Tab right next to you.
@@ -66,6 +68,11 @@ Quantum Brush is basically a graphics software powered by quantum-computing-imag
 	You don't need to download another installation file. You can just simply browse through the `$HOME/quantumbrush` folder, and repeat the number 3-8 on the Terminal window, only for `update.sh` file this time!
 
 # Examples
+
+	The combination of the stroke and the quantum brush that we choose, the result is this!
+
+![Example of Quantum Brush](https://private-user-images.githubusercontent.com/50163676/476522263-ea0f6bca-44ea-4cec-b8a0-cebab87d073d.png?jwt=eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJnaXRodWIuY29tIiwiYXVkIjoicmF3LmdpdGh1YnVzZXJjb250ZW50LmNvbSIsImtleSI6ImtleTUiLCJleHAiOjE3NTQ5MjQ4NTksIm5iZiI6MTc1NDkyNDU1OSwicGF0aCI6Ii81MDE2MzY3Ni80NzY1MjIyNjMtZWEwZjZiY2EtNDRlYS00Y2VjLWI4YTAtY2ViYWI4N2QwNzNkLnBuZz9YLUFtei1BbGdvcml0aG09QVdTNC1ITUFDLVNIQTI1NiZYLUFtei1DcmVkZW50aWFsPUFLSUFWQ09EWUxTQTUzUFFLNFpBJTJGMjAyNTA4MTElMkZ1cy1lYXN0LTElMkZzMyUyRmF3czRfcmVxdWVzdCZYLUFtei1EYXRlPTIwMjUwODExVDE1MDIzOVomWC1BbXotRXhwaXJlcz0zMDAmWC1BbXotU2lnbmF0dXJlPWJiYmFiYzA3NjUzMzc1N2ZkNTgzOTg1MmVhY2E1MmE2NjU4YzY2MGNkYzk4MDU3YTk1NGNlNzI4NWMyNDBmNjYmWC1BbXotU2lnbmVkSGVhZGVycz1ob3N0In0.cVYDtI4bV6Kv-ZSSvnJ5378btgHJ70jo_NShlJz_YY0)
+c.f. Image credit: [Pavilion by the Lake](https://www.metmuseum.org/art/collection/search/40429)
 
 	You can see the tech-savvy details on our paper and understand deeply about quantum-powered creativity!
     
