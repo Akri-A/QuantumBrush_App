@@ -18,9 +18,20 @@ This application is tested with MacOS Sequoia (15.5) && Eclipse IDE (2025-03) &&
 
 However, Luckily, the installer provides automatic OpenJDK + Python installation through `miniconda` thus you actually don’t need to do anything! `install.sh` creates condo environment `’quantumbrush’` and store all necessary libraries there. More of this is described under [Installation Instructions](https://github.com/moth-quantum/quantum-brush-collab?tab=readme-ov-file#instllation-instruction).
 
-The program has three windows.
+Quantum Brush is basically a graphics software powered by quantum-computing-imagination. There’s nothing which makes user experience difficult. The program has three windows. Treat them equally well.
+
 1. Canvas
+
+![The image of a canvas] (https://private-user-images.githubusercontent.com/50163676/476522204-e0411fc0-f9ef-46d3-91f3-b786657c070d.png?jwt=eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJnaXRodWIuY29tIiwiYXVkIjoicmF3LmdpdGh1YnVzZXJjb250ZW50LmNvbSIsImtleSI6ImtleTUiLCJleHAiOjE3NTQ5MTE5ODQsIm5iZiI6MTc1NDkxMTY4NCwicGF0aCI6Ii81MDE2MzY3Ni80NzY1MjIyMDQtZTA0MTFmYzAtZjllZi00NmQzLTkxZjMtYjc4NjY1N2MwNzBkLnBuZz9YLUFtei1BbGdvcml0aG09QVdTNC1ITUFDLVNIQTI1NiZYLUFtei1DcmVkZW50aWFsPUFLSUFWQ09EWUxTQTUzUFFLNFpBJTJGMjAyNTA4MTElMkZ1cy1lYXN0LTElMkZzMyUyRmF3czRfcmVxdWVzdCZYLUFtei1EYXRlPTIwMjUwODExVDExMjgwNFomWC1BbXotRXhwaXJlcz0zMDAmWC1BbXotU2lnbmF0dXJlPTA4MGNiZGYzOTZhN2EyYTRjMTg0NTE1ZGVhMzgyZjU4NWIwNTE2ZTBkYmNjNjFhOTdmODYwZGFhNGQzM2M5ODcmWC1BbXotU2lnbmVkSGVhZGVycz1ob3N0In0.LV0DeIM-al9T0t26CgDWGAKFO7ZRnbx0OX3S9JUGPJM)
+   This is the place where your image/canvas is displayed and you interact with it by `mouseClicked` and `mouseDragged`. `mouseClicked` will create a yellow dot. `mouseDragged` will create a red line. Look at the screenshot above.
+   Those elements are crucial for quantum algorithms, so treat it nicely.
+
+   ⚠️ CAVEAT: Because of this special requirements, after you work on other windows, you MUST click the title bar of the canvas or it will wrongly leave yellow dots. This might make quantum brush algorithms to misbehave so be careful!
+
+   Now, what will you do if you want to do something with quantum brush algorithms? As a sidekick, there is a control panel. 
+   
 2. Control panel
+
 3. Stroke Manager
 
 ## Installation Instructions
