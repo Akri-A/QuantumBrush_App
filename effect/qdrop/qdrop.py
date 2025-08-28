@@ -107,9 +107,7 @@ def run(params):
     initial_angles = [] #(Theta,phi)
     pixels = []
     for lines in split_paths:
-
-        region = utils.points_within_radius(lines, radius)
-        region = np.clip(region, [0, 0], [height - 1, width - 1])
+        region = utils.points_within_radius(lines, radius,border = (height, width))
 
         selection = image[region[:, 0], region[:, 1]]
         selection = selection.astype(np.float32) / 255.0
