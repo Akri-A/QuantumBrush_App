@@ -1,9 +1,9 @@
 {
-    "name": "QDrop",
+    "name": "Aquarela",
     "id": "qdrop", 
     "author": "Joao",
     "version": "1.0.0",
-    "description": "This applies a change of hue and luminosity to each section of the brush. All the parts are entangled, so the color of one part will affect the color of the others.\nRadius: brush size.\nNumber of Drops: number of color segments.\nStrength: effect intensity.\nTarget Color: the initial color of the brush.",
+    "description": "The Aquarela brush allows the user to mix the color of the brush with the canvas and generate new color variations using entanglement.\n\nThe quality of the effect is controlled by several parameters:\n 🔹 Radius → determines the size of the brush\n 🔹 Strength → controls how strong the effect is (0 = no effect)\n 🔹 Target Color → the base color of the watercolor brush\n 🔹 Number of Drops → resolution of the effect\n\nUsage:\n 🔸 Click and drag on the canvas in a single motion to apply the effect.",
     "dependencies": {
         "numpy": ">=2.1.0",
         "colorsys": ""

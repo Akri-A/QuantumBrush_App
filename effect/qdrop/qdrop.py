@@ -32,13 +32,8 @@ def drop(initial_angles, target_angle,strength):
         qc.crz( - strength * phi,target_qubit = i,control_qubit  = num_qubits)
         qc.cry(strength * (target_theta-theta),target_qubit = i,control_qubit  = num_qubits)
         qc.crz( strength * target_phi,target_qubit = i,control_qubit  = num_qubits)
-
-        #qc.rz(- strength *phi * np.arccos(i* np.pi/(num_qubits-1)/2),i)
-        #qc.ry(strength * (target_theta-theta)  * np.arccos(i* np.pi/(num_qubits-1)/2),i)
-        #qc.rz(strength * target_phi * np.arccos(i* np.pi/(num_qubits-1)/2),i)
-
-        if num_qubits > 1:
-            qc.ry(np.pi/(num_qubits-1), num_qubits)
+        qc.cry(np.pi/3, target_qubit = num_qubits, control_qubit= i)
+        qc.ry(-np.pi/3, num_qubits)
             
     # Compute entanglement entropy after tracing out the last qubit
     if False:
@@ -142,7 +137,7 @@ def run(params):
         selection_hls[...,1] += offset_l
         #selection_hls[...,2] *= 100000
 
-        #Need to change the luminoisty
+        #Need to change the luminosity
         selection_hls = np.clip(selection_hls, 0, 1)
 
         selection_rgb = utils.hls_to_rgb(selection_hls)
