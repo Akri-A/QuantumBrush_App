@@ -142,7 +142,7 @@ def run(params):
         selection_hls[...,1] += offset_l
         #selection_hls[...,2] *= 100000
 
-        #Need to change the luminoisty
+        #Need to change the luminosity
         selection_hls = np.clip(selection_hls, 0, 1)
 
         selection_rgb = utils.hls_to_rgb(selection_hls)

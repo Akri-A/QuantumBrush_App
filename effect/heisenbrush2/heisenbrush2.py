@@ -15,7 +15,7 @@ def scale_to_range(x, in_min=1, in_max=100, out_min=2, out_max=10):
     """
     if not (in_min <= x <= in_max):
         raise ValueError(f"Input {x} is out of range [{in_min}, {in_max}]")
-    return int(round(out_min + (x - in_min) * (out_max - out_min) / (in_max - in_min))) if in_max < 100 else 10
+    return int(round(out_min + (x - in_min) * (out_max - out_min) / (in_max - in_min))) if in_max<100 else 10
 
 
 def get_mean_magnetization(n_qubits:int):
@@ -60,7 +60,7 @@ def time_evolution_Heisenberg(n_qubits: int, J_list: list, hz_list: list, hx_lis
 
     return circ_dt
 
-def run_heisenberg_hardware(dt_list,hue, saturation, lightness, radius, phi, theta):
+def run_heisenberg_hardware(dt_list, radius, phi, theta):
     """
     Run Heisenberg model simulation on quantum hardware simulator.
 
@@ -87,12 +87,14 @@ def run_heisenberg_hardware(dt_list,hue, saturation, lightness, radius, phi, the
             circ.ry(theta, i)
             circ.rz(phi, i)
 
+
         ### start time evolution
         for step,dt in zip(range(nsteps),dt_list):
             print(f"J_list: {J_list}, hz_list: {hz_list}, hx_list: {hx_list}, dt: {dt}")
             circ_dt = time_evolution_Heisenberg(n_qubits, J_list, hz_list, hx_list, dt)
             circ = circ.compose(circ_dt)
             circuits.append(circ.copy())
+
 
         observables = get_mean_magnetization(n_qubits)
 
@@ -102,24 +104,8 @@ def run_heisenberg_hardware(dt_list,hue, saturation, lightness, radius, phi, the
         values=np.array([val[0] for val in values])
 
         print(f"Values: {values}")
-
-        # Ensure values wrap around [0, 1] using modulo for circular behavior
-        new_hue = (hue + values) % 1.0
-        new_lightness = (lightness + values) % 1.0
-        new_saturation = (saturation + values) % 1.0
-
-
-        # Map normalized values to HSL-based RGB
-        color_results = [
-            tuple(int(round(c * 255)) for c in colorsys.hls_to_rgb(float(new_hue[i]), new_lightness[i], new_saturation[i]))
-            for i in range(len(new_hue))
-        ]
-
-        print(f"old hue: {hue}, old lightness: {lightness}, old saturation: {saturation}")
-        print(f"new hue: {new_hue}, new lightness: {new_lightness}, new saturation: {new_saturation}")
-        print(f"Generated new colors: {color_results}")
-
-        return color_results
+        return values
+       
 
     except Exception as e:
         print(f"Quantum simulation failed: {e}")
@@ -152,50 +138,42 @@ def run(params):
     radius = params["user_input"]["Radius"]
     assert radius > 0, "Radius must be greater than 0"
 
-
     color = params["user_input"]["Color"]
+    h,l,s = colorsys.rgb_to_hls(color[0]/255, color[1]/255, color[2]/255)
     print(f"Using color: {color}")
-    assert len(color) == 3, "Color must be RGB format"
 
-    from scipy.stats import circmean
-
-    rgb = np.array(color, dtype=np.float32) / 255.0
-    rcolor, gcolor, bcolor = rgb
-    hue, lightness, saturation = colorsys.rgb_to_hls(rcolor, gcolor, bcolor)
-
-    # Convert hue to radians and lightness to a fraction
-    phi = circmean([2 * np.pi * hue]) #phi: computes the circular mean of hue, scaled from [0,1] to [0, 2π].
-    theta = np.pi * lightness #theta: computes the linear mean of lightness (L channel), scaled from [0,1] to [0, π].
+    phi, theta, _ = utils.color_to_spherical(color)
     print(f"Using angles: phi={phi}, theta={theta}")
-
 
     strength = params["user_input"]["Strength"]
     assert strength > 0, "Strength must be greater than 0"
-
 
     clicks = params["stroke_input"]["clicks"]
     assert len(clicks) < 11, "There can be no more than 10 clicks in a stroke"
 
     split_paths = utils.split_path_from_clicks(path,clicks)
 
-    # Normalize distances
-    distances = [len(p) for p in split_paths]
-
-    normalized_distances = [ 0.1 * d / max(distances) for d in distances]
-
+    normalized_distances = [0.1] * len(split_paths) #dt*path_length
+  
     # Run Heisenberg simulation to get colors
-    heisenberg_colors = run_heisenberg_hardware(normalized_distances, hue, saturation, lightness, radius, phi, theta)
-    # print(f"Generated {len(heisenberg_colors)} Heisenberg colors")
+    color_shifts = run_heisenberg_hardware(normalized_distances, radius, phi, theta)
 
-    for c, path in enumerate(split_paths):
+    new_hls = np.array([[(h + shift) % 1.0, (l + shift) % 1, (s + shift) % 1.0] for shift in color_shifts])
+    heisenberg_colors = utils.hls_to_rgb(new_hls)
+
+    
+    for i,path in enumerate(split_paths):
+        # Get the region around this point
         region = utils.points_within_radius(path, radius, border=(height, width))
-        x, y = region[:, 0], region[:, 1]
-        base_color = np.array(params["user_input"]["Color"], dtype=np.float32)
-        heisenberg_color = np.array(heisenberg_colors[c], dtype=np.float32)
-        blended = (1 - strength) * base_color + strength * heisenberg_color
-        blended = np.tile(blended, (len(x), 1))  # Repeat for each pixel in the region
 
-        image[x, y, :3] = blended.astype(np.uint8)
+        new_color = (1 - strength) * (color/255) + strength * heisenberg_colors[i]
+
+        print(f"Applying color {new_color} to region of size {len(region)}")
+
+        new_patch = image[region[:, 0], region[:, 1]].astype(np.float32)/255
+        new_patch[...,:3] = new_color
+
+        image[region[:, 0], region[:, 1]] = utils.apply_patch_to_image(image[region[:, 0], region[:, 1]], new_patch)
 
     print("Heisenberg effect applied successfully")
     return image
