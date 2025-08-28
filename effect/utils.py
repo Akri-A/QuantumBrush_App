@@ -7,6 +7,7 @@ import colorsys
 from itertools import product
 import matplotlib.pyplot as plt
 from matplotlib.path import Path as plt_path
+from scipy.ndimage import distance_transform_edt
 
 def svd(matrix=None,U=None,S=None,Vt=None):
     if U is not None:
@@ -20,7 +21,25 @@ def svd(matrix=None,U=None,S=None,Vt=None):
     return U[:, sorted_indices], S[sorted_indices], Vt[sorted_indices, :]
 
 
-def points_within_radius(points, radius, border = None):
+def color_to_spherical(color):
+    """
+    Convert an RGB color to spherical angles (phi, theta).
+    Args:
+        color (tuple): A tuple of (R, G, B) values in the range [0, 255].
+    Returns:
+        tuple: A tuple of (phi, theta) angles in radians.
+    """
+
+    rgb = np.array(color, dtype=np.float32) / 255.0
+    hue, lightness, saturation = rgb_to_hls(rgb)
+    
+    phi = 2 * np.pi * hue #phi: computes the circular mean of hue, scaled from [0,1] to [0, 2π].
+    theta = np.pi * lightness #theta: computes the linear mean of lightness (L channel), scaled from [0,1] to [0, π].
+
+    return phi, theta, saturation
+
+
+def points_within_radius_old(points, radius, border = None):
     """
     Given a set of points and a radius, return all points within the radius.
     Args:
@@ -51,6 +70,43 @@ def points_within_radius(points, radius, border = None):
     return result
 
 
+
+def points_within_radius(points, radius=10, border = None, return_distance = False):
+    """
+    Given a dense list of 1-pixel-apart (x, y) points forming a line,
+    returns all pixel coordinates within `offset` pixels of the line.
+    """
+    points = np.array(points, dtype=int)
+    #print("initial points ", points)
+    # Compute canvas bounds
+    min_yx = points.min(axis=0) - radius - 1
+    max_yx = points.max(axis=0) + radius + 1
+    height, width = (max_yx - min_yx + 1)
+
+    # Shift line to start at (0, 0)
+    shifted = points - min_yx
+    #print("shifted points ", shifted[:10])
+    # Create binary mask
+    mask = np.zeros((height, width), dtype=bool)
+    mask[shifted[:, 0], shifted[:, 1]] = True  # y, x
+    
+    # Distance transform
+    dist = distance_transform_edt(~mask)
+    # Find pixels within offset
+    region_mask = dist <= radius
+    ys, xs = np.nonzero(region_mask)
+
+    # Shift back to original coordinates
+    coords = np.stack([ys, xs], axis=1) + min_yx
+    #print(coords)
+    if border is not None:
+        coords = np.clip(coords, [0, 0], [border[0] - 1, border[1] - 1])
+
+    if return_distance:
+        distances = dist[ys, xs] / radius
+        return coords, distances
+
+    return coords
 
 def points_within_lasso(points,border = None):
     min_x = np.min(points[:,1])
@@ -251,3 +307,24 @@ def hls_to_rgb(hlsa: np.ndarray):
 
     return rgb
 
+def apply_patch_to_image(original_image: np.ndarray, new_patch: np.ndarray, blur= False, distance = None):
+    assert original_image.shape == new_patch.shape, "Original image and patch must have the same shape"
+    assert original_image.dtype == np.uint8, "Original image must be uint8"
+
+    original_float = original_image.astype(np.float32) / 255
+
+    if new_patch.dtype == np.uint8:
+        new_patch = new_patch.astype(np.float32) / 255
+
+    alpha = original_float[...,3]
+    if blur:
+        assert distance is not None, "Distance must be provided if blur is enabled"
+        assert distance.shape[0] == new_patch.shape[0], "Distance must have the same shape as the patch, patch shape: "+str(new_patch.shape)+", distance shape: "+str(distance.shape)
+        alpha *= (1-np.exp(-np.abs((distance-1)/0.5)**4))
+
+    alpha = alpha[:,None]
+
+    new_patch[..., :3] = (1 - alpha) * original_float[..., :3] + alpha * new_patch[..., :3]
+
+    return (new_patch * 255).astype(np.uint8)
+    

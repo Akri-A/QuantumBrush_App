@@ -23,6 +23,10 @@
         "Color": {
             "type": "color",
             "default": "#FF0000"
+        },
+        "Blur Edges": {
+            "type": "bool",
+            "default": true
         }
     },
     "stroke_input": {
@@ -30,6 +34,6 @@
         "path": "array"
     },
     "flags": {
-        "smooth": true
+        "smooth_path": true
     }
 }

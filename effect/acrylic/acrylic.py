@@ -1,5 +1,10 @@
 import numpy as np
 import time  # Added proper import for sleep functionality
+import importlib.util
+
+spec = importlib.util.spec_from_file_location("utils", "effect/utils.py")
+utils = importlib.util.module_from_spec(spec)
+spec.loader.exec_module(utils)
 
 def run(params):
     """
@@ -16,8 +21,8 @@ def run(params):
     image = params["stroke_input"]["image_rgba"]
     assert image.shape[-1] == 4, "Image must be RGBA format"
 
-    width = image.shape[0]
-    height = image.shape[1]
+    width = image.shape[1]
+    height = image.shape[0]
 
     # All the requirements that were requested are also available
     radius = params["user_input"]["Radius"]
@@ -26,14 +31,19 @@ def run(params):
     assert params["user_input"]["Color"].shape[0] == 3, "Color must be RGB format"
     assert params["user_input"]["Alpha"] >= 0 and params["user_input"]["Alpha"] <= 1, "Alpha must be between 0 and 1"
     
-    for p in params["stroke_input"]["path"]:
-        min_x = np.clip(p[0]-radius, 0, width)
-        max_x = np.clip(p[0]+radius, 0, width)
-        min_y = np.clip(p[1]-radius, 0, height)
-        max_y = np.clip(p[1]+radius, 0, height)
+    path = params["stroke_input"]["path"]
 
-        image[min_x:max_x, min_y:max_y, :3] = params["user_input"]["Color"]
-        # Restore the alpha channel setting that was commented out
-        image[min_x:max_x, min_y:max_y, 3] = int(params["user_input"]["Alpha"] * 255)
+    blur = params["user_input"]["Blur Edges"]
+
+    alpha = params["user_input"]["Alpha"]
+
+    #We can also use some helpful functions from utils
+    region, distance = utils.points_within_radius(path, radius, border = (height, width), return_distance=True)
+
+    patch = image[region[:, 0], region[:, 1]].astype(np.float32) / 255
+    patch[...,:3] = params["user_input"]["Color"] / 255 # Set RGB channels
+    patch[...,3] = alpha 
+
+    image[region[:, 0], region[:, 1]] = utils.apply_patch_to_image(image[region[:, 0], region[:, 1]], patch, blur=blur, distance=distance)
 
     return image
