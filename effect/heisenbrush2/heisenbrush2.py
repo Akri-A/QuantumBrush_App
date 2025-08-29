@@ -159,6 +159,7 @@ def run(params):
     color_shifts = run_heisenberg_hardware(normalized_distances, radius, phi, theta)
 
     new_hls = np.array([[(h + shift) % 1.0, (l + shift) % 1, (s + shift) % 1.0] for shift in color_shifts])
+    new_hls = np.array([(1 - strength) * np.array([h,l,s]) + strength * new for new in new_hls])
     heisenberg_colors = utils.hls_to_rgb(new_hls)
 
     
@@ -166,12 +167,8 @@ def run(params):
         # Get the region around this point
         region = utils.points_within_radius(path, radius, border=(height, width))
 
-        new_color = (1 - strength) * (color/255) + strength * heisenberg_colors[i]
-
-        print(f"Applying color {new_color} to region of size {len(region)}")
-
         new_patch = image[region[:, 0], region[:, 1]].astype(np.float32)/255
-        new_patch[...,:3] = new_color
+        new_patch[...,:3] = heisenberg_colors[i]
 
         image[region[:, 0], region[:, 1]] = utils.apply_patch_to_image(image[region[:, 0], region[:, 1]], new_patch)
 
