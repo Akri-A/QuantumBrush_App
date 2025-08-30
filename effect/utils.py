@@ -250,6 +250,31 @@ def square_region(click, radius):
     points = np.stack((mesh_y.flatten(), mesh_x.flatten()), axis=-1)
     return points
 
+def convert_rgb_to_hls(r, g, b):
+    """Overwrites colorsys.rgb_to_hls to handle greyscale"""
+    
+    maxc = max(r, g, b)
+    minc = min(r, g, b)
+    sumc = (maxc+minc)
+    rangec = (maxc-minc)
+    l = sumc/2.0
+    if minc == maxc:
+        return 0.0, l, 1.0
+    if l <= 0.5:
+        s = rangec / sumc
+    else:
+        s = rangec / (2.0-maxc-minc)  # Not always 2.0-sumc: gh-106498.
+    rc = (maxc-r) / rangec
+    gc = (maxc-g) / rangec
+    bc = (maxc-b) / rangec
+    if r == maxc:
+        h = bc-gc
+    elif g == maxc:
+        h = 2.0+rc-bc
+    else:
+        h = 4.0+gc-rc
+    h = (h/6.0) % 1.0
+    return h, l, s
 
 def rgb_to_hls(rgba: np.ndarray):
     """
@@ -265,21 +290,21 @@ def rgb_to_hls(rgba: np.ndarray):
         rgb = rgba[..., :3]
 
         if len(rgb.shape) == 1:
-            hls = colorsys.rgb_to_hls(*rgb)
+            hls = convert_rgb_to_hls(*rgb)
             hls.append(rgba[3])
 
         else:
-            hls = np.apply_along_axis(lambda x: colorsys.rgb_to_hls(*x), -1, rgb)
+            hls = np.apply_along_axis(lambda x: convert_rgb_to_hls(*x), -1, rgb)
             hls = np.concatenate([hls, rgba[..., 3][..., np.newaxis]], axis=-1)
     
     else:
         rgb = rgba
 
         if len(rgb.shape) == 1:
-            hls = colorsys.rgb_to_hls(*rgb)
+            hls = convert_rgb_to_hls(*rgb)
 
         else:
-            hls = np.apply_along_axis(lambda x: colorsys.rgb_to_hls(*x), -1, rgb)
+            hls = np.apply_along_axis(lambda x: convert_rgb_to_hls(*x), -1, rgb)
 
     return hls
     

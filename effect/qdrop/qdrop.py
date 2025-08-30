@@ -32,8 +32,7 @@ def drop(initial_angles, target_angle,strength):
         qc.crz( - strength * phi,target_qubit = i,control_qubit  = num_qubits)
         qc.cry(strength * (target_theta-theta),target_qubit = i,control_qubit  = num_qubits)
         qc.crz( strength * target_phi,target_qubit = i,control_qubit  = num_qubits)
-        qc.cry(np.pi/3, target_qubit = num_qubits, control_qubit= i)
-        qc.ry(-np.pi/3, num_qubits)
+        qc.cry(np.pi/3, target_qubit = num_qubits, control_qubit= i,ctrl_state='0')
             
     # Compute entanglement entropy after tracing out the last qubit
     if False:
