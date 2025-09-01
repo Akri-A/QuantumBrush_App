@@ -35,11 +35,12 @@ Quantum Brush is basically a graphics software powered by quantum-computing-imag
 2. Control panel
 
 ![The image of Control Panel](https://private-user-images.githubusercontent.com/50163676/476522309-5f6c6412-0c3f-495f-8b0b-bac223552f6f.png?jwt=eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJnaXRodWIuY29tIiwiYXVkIjoicmF3LmdpdGh1YnVzZXJjb250ZW50LmNvbSIsImtleSI6ImtleTUiLCJleHAiOjE3NTY2MjQ3ODYsIm5iZiI6MTc1NjYyNDQ4NiwicGF0aCI6Ii81MDE2MzY3Ni80NzY1MjIzMDktNWY2YzY0MTItMGMzZi00OTVmLThiMGItYmFjMjIzNTUyZjZmLnBuZz9YLUFtei1BbGdvcml0aG09QVdTNC1ITUFDLVNIQTI1NiZYLUFtei1DcmVkZW50aWFsPUFLSUFWQ09EWUxTQTUzUFFLNFpBJTJGMjAyNTA4MzElMkZ1cy1lYXN0LTElMkZzMyUyRmF3czRfcmVxdWVzdCZYLUFtei1EYXRlPTIwMjUwODMxVDA3MTQ0NlomWC1BbXotRXhwaXJlcz0zMDAmWC1BbXotU2lnbmF0dXJlPTljN2E1YTFkMzc5NzIyYTZmMDNiMzY5ZmRlZTUwNmMxOTYxNzM3NzFkMDg2NThlZjZjZDU5MzBhZjMyMmZmNGMmWC1BbXotU2lnbmVkSGVhZGVycz1ob3N0In0.bimFVr6-_lE9G2gRD3zep08ZODs1xfqLnGv4rrQTfBg)
-	This window is for modifying parameters for quantum brush algorithms. It depends on which brush did you choose. For example, Heisenbrush (Ver.Continuous) here has a radius, lightness, saturation and strength. It also contains tiny descriptions of each brush.
 
-    After creating & modifying each brush stroke, we must group those paths and level them up to a system called 'stroke'. When you press 'Create', the program will say you can open up Stroke Manager to run the quantum algorithms. It depends on your choice. You can make bunch of strokes BEFORE you run them on quantum simulations/hardware (in the near future) OR you can directly open up the manager window and run the algorithms. This program is designed to not interfere with creative workflow.
-
-    Have you decided to move along to Stroke Manager?
+ This window is for modifying parameters for quantum brush algorithms. It depends on which brush did you choose. For example, Heisenbrush (Ver.Continuous) here has a radius, lightness, saturation and strength. It also contains tiny descriptions of each brush.
+ 
+ After creating & modifying each brush stroke, we must group those paths and level them up to a system called 'stroke'. When you press 'Create', the program will say you can open up Stroke Manager to run the quantum algorithms. It depends on your choice. You can make bunch of strokes BEFORE you run them on quantum simulations/hardware (in the near future) OR you can directly open up the manager window and run the algorithms. This program is designed to not interfere with creative workflow.
+ 
+ Have you decided to move along to Stroke Manager?
 
 3. Stroke Manager
 
