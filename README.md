@@ -47,9 +47,10 @@ Quantum Brush is basically a graphics software powered by quantum-computing-imag
 	Open up Stroke Manager from *Tools* on the menu bar.
 
 ![The image of Stoke Manager](https://private-user-images.githubusercontent.com/50163676/476522241-00e21b8c-9c0c-4f1c-b98c-9866d594af2a.png?jwt=eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJnaXRodWIuY29tIiwiYXVkIjoicmF3LmdpdGh1YnVzZXJjb250ZW50LmNvbSIsImtleSI6ImtleTUiLCJleHAiOjE3NTY2MjQ3ODYsIm5iZiI6MTc1NjYyNDQ4NiwicGF0aCI6Ii81MDE2MzY3Ni80NzY1MjIyNDEtMDBlMjFiOGMtOWMwYy00ZjFjLWI5OGMtOTg2NmQ1OTRhZjJhLnBuZz9YLUFtei1BbGdvcml0aG09QVdTNC1ITUFDLVNIQTI1NiZYLUFtei1DcmVkZW50aWFsPUFLSUFWQ09EWUxTQTUzUFFLNFpBJTJGMjAyNTA4MzElMkZ1cy1lYXN0LTElMkZzMyUyRmF3czRfcmVxdWVzdCZYLUFtei1EYXRlPTIwMjUwODMxVDA3MTQ0NlomWC1BbXotRXhwaXJlcz0zMDAmWC1BbXotU2lnbmF0dXJlPWVmNTIyMjQ4ODRjYTUwNGFkZTM0M2VjNjU5Y2Y5ODYwODlmMGY0YTI3ZjE1MzI5OGMyZTQ2NTVlNWMyZWUyYzcmWC1BbXotU2lnbmVkSGVhZGVycz1ob3N0In0.sSDMTjKoZrm7QQ_U6uy1dui_EHbXCgg5rm69HHH9GUs)
-	Here, you can see the list of ’strokes’ that you created. You can change the timeline of them, for example, run the recent stroke on the simulator than the old one.
 
-    When you click 'Run', Python process will run in the background. You can close the window and come back to actually apply the processed result on the divided section. If the result is satisfactory, press the 'Apply to Canvas' button.
+ Here, you can see the list of ’strokes’ that you created. You can change the timeline of them, for example, run the recent stroke on the simulator than the old one.
+ 
+ When you click 'Run', Python process will run in the background. You can close the window and come back to actually apply the processed result on the divided section. If the result is satisfactory, press the 'Apply to Canvas' button.
 
 # Installation Instructions
 1. Look at the Release Tab right next to you.
@@ -68,7 +69,7 @@ Quantum Brush is basically a graphics software powered by quantum-computing-imag
 
 # Examples
 
-	The combination of the stroke and the quantum brush that we choose, the result is this!
+The combination of the stroke and the quantum brush that we choose, the result is this!
 
 ![Example of Quantum Brush](https://private-user-images.githubusercontent.com/50163676/476522263-ea0f6bca-44ea-4cec-b8a0-cebab87d073d.png?jwt=eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJnaXRodWIuY29tIiwiYXVkIjoicmF3LmdpdGh1YnVzZXJjb250ZW50LmNvbSIsImtleSI6ImtleTUiLCJleHAiOjE3NTY2MjQ3ODYsIm5iZiI6MTc1NjYyNDQ4NiwicGF0aCI6Ii81MDE2MzY3Ni80NzY1MjIyNjMtZWEwZjZiY2EtNDRlYS00Y2VjLWI4YTAtY2ViYWI4N2QwNzNkLnBuZz9YLUFtei1BbGdvcml0aG09QVdTNC1ITUFDLVNIQTI1NiZYLUFtei1DcmVkZW50aWFsPUFLSUFWQ09EWUxTQTUzUFFLNFpBJTJGMjAyNTA4MzElMkZ1cy1lYXN0LTElMkZzMyUyRmF3czRfcmVxdWVzdCZYLUFtei1EYXRlPTIwMjUwODMxVDA3MTQ0NlomWC1BbXotRXhwaXJlcz0zMDAmWC1BbXotU2lnbmF0dXJlPTYzNzQ4NzQ3NzM0MDhiN2QzMzliNzFjNzY1OWQ3N2RiNzBiOTk3YWIzMzExMTg1N2IzMDllMGYxOTVlYjMzNzAmWC1BbXotU2lnbmVkSGVhZGVycz1ob3N0In0.CemoEPUOr9FHt71o-ZsWjddkBxQ8f7qxd74fWwswnzw)
 c.f. Image credit: [Pavilion by the Lake](https://www.metmuseum.org/art/collection/search/40429)
