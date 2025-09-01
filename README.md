@@ -3,7 +3,7 @@
 - Lightweight program which supports quantum simulation and hardware communication both.
 - Work with high-res images with quantum backend to draw, modify and have fun!
 
-👩🏻‍💻 Author: MOTH Quantum (This app is built with ❤️ by [Astryd Park](https://www.github.com/artreadcode)
+👩🏻‍💻 Author: MOTH Quantum (This app is built with ❤️ by [Astryd Park](https://www.github.com/artreadcode))
 
 ---
 
