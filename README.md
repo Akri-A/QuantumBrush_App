@@ -79,7 +79,7 @@ c.f. Image credit: [Pavilion by the Lake](https://www.metmuseum.org/art/collecti
 
 # One more thing...
 
-Users can create their own quantum brush and contribute to this open-source project! The dummy brush looks like this:
+Users can create their own quantum brush and contribute to this open-source project! The dummy brush looks like this (Have a look at the `template` folder underneath `effect`, too.:
 
 ```
 QuantumBrush
@@ -95,6 +95,50 @@ Any users who have brilliant idea regarding visual effects using quantum mechani
 The current nature of quantum computing requires lot of dependencies. If it needs to be manually installed, look at the line __*318*__ of `setup.sh`. You will notice there's an automatic block of script to install dependencies with `conda run -n quantumbrush pip install`. Don't forget to add yours here so that your work won't crash. Recommended workflow is **A)** Sketch your idea, **B)** Think about which technical stack is needed and **C)** Fork the repository, modify the `setup.sh` or jump right into development.
 
 You can see all debugging results if you open up the `View Live Debug Log` underneath Tools in the Control Panel window.
+
+1. `__init__.py` is just an empty file for existance.
+2. `{brushName}.py` is a brush algorithm file. Make your `run(...)` function to be linked to the `effects/apply_effect.py` in the future.
+3. `{brushName}.json` is a file contains initialised parameters for the brush. This is the example from `template.json`. It contains the default values for each parameter, data type of each and other metadata which is your name or a description. `id` is extra important because this will be used to communicate between each script.
+
+   ``` json
+   {
+    "name": "Super cool effect",
+    "id": "id_without_spaces", # Set this well so that it could be called from other scripts.
+    "author": "creator", # Your name
+    "version": "1.0.0",
+    "description": "Small description of the effect.",
+    "dependencies": {
+        "numpy": ">=2.1.0"
+    },
+    "user_input": {
+        "Radius": {
+            "type": "int",
+            "min": 0,
+            "max": 100,
+            "default": 20 
+        },
+        "Strenght": {
+            "type": "float",
+            "min": 0.0,
+            "max": 1.0,
+            "default": 1.0
+        },
+        "Color": {
+            "type": "color",
+            "default": "#FF0000"
+        }
+    },
+    "stroke_input": {
+        "image_rgba": "array",
+        "path": "array",
+        "clicks": "array"
+    },
+    "flags": {
+        "smooth_path": true
+    }
+   ```
+
+While development, check `apply_effect.py` underneath the `effect` folder so that you can have a glimpse of how backend communicates. Happy quantum!
 
 # Technical Stack
 
