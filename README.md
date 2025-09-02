@@ -75,11 +75,26 @@ The combination of the stroke and the quantum brush that we choose, the result i
 c.f. Image credit: [Pavilion by the Lake](https://www.metmuseum.org/art/collection/search/40429)
 	You can see the tech-savvy details on our paper and understand deeply about quantum-powered creativity!
     
-- Link: {LINK WILL BE ADDED}
+- Our paper: {TBD!}
 
 # One more thing...
 
-Users can create their own quantum brush and contribute to this open-source project!
+Users can create their own quantum brush and contribute to this open-source project! The dummy brush looks like this:
+
+```
+QuantumBrush
+	|_ effect
+			|_ {brushName}
+						|_ {brushName}.py
+						|_ {brushName}.json
+						|_ __init__.py
+```
+
+Any users who have brilliant idea regarding visual effects using quantum mechanics can fork this repository, include their own brush and raise a pull request. After the review, we will add your work with credit in the `dist` branch.
+
+The current nature of quantum computing requires lot of dependencies. If it needs to be manually installed, look at the line __*318*__ of `setup.sh`. You will notice there's an automatic block of script to install dependencies with `conda run -n quantumbrush pip install`. Don't forget to add yours here so that your work won't crash. Recommended workflow is **A)** Sketch your idea, **B)** Think about which technical stack is needed and **C)** Fork the repository, modify the `setup.sh` or jump right into development.
+
+You can see all debugging results if you open up the `View Live Debug Log` underneath Tools in the Control Panel window.
 
 # Technical Stack
 
