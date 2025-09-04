@@ -76,7 +76,7 @@ The combination of the stroke and the quantum brush that we choose, the result i
 c.f. Image credit: [Pavilion by the Lake](https://www.metmuseum.org/art/collection/search/40429)
 	You can see the tech-savvy details on our paper and understand deeply about quantum-powered creativity!
     
-- Our paper: {TBD!}
+- Our paper is on Arxiv now! Check it out [here](https://arxiv.org/abs/2509.01442).
 
 # One more thing...
 
