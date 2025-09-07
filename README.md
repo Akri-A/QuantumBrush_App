@@ -25,7 +25,7 @@ Quantum Brush is basically a graphics software powered by quantum-computing-imag
 
 1. Canvas
 
-![The image of Canvas](https://drive.google.com/file/d/1PVVYNW-3WLvvde402OR99hqQ4VHYThNk/view?usp=sharing)
+![The image of Canvas](/screenshots/before.png)
    This is the place where your image/canvas is displayed and you interact with it by `mouseClicked` and `mouseDragged`. `mouseClicked` will create a yellow dot. `mouseDragged` will create a red line. Look at the screenshot above.
    Those elements are crucial for quantum algorithms, so treat it nicely.
 
@@ -35,7 +35,7 @@ Quantum Brush is basically a graphics software powered by quantum-computing-imag
    
 2. Control panel
 
-![The image of Control Panel](https://github.com/moth-quantum/qb-dev/blob/processing-java/img/476522309-5f6c6412-0c3f-495f-8b0b-bac223552f6f.png?raw=true)
+![The image of Control Panel](/screenshots/control.png)
 
  This window is for modifying parameters for quantum brush algorithms. It depends on which brush did you choose. For example, Heisenbrush (Ver.Continuous) here has a radius, lightness, saturation and strength. It also contains tiny descriptions of each brush.
  
@@ -47,7 +47,7 @@ Quantum Brush is basically a graphics software powered by quantum-computing-imag
 
 	Open up Stroke Manager from *Tools* on the menu bar.
 
-![The image of Stoke Manager](https://github.com/moth-quantum/qb-dev/blob/processing-java/img/476522241-00e21b8c-9c0c-4f1c-b98c-9866d594af2a.png?raw=true)
+![The image of Stoke Manager](/screenshots/manager.png)
 
  Here, you can see the list of ’strokes’ that you created. You can change the timeline of them, for example, run the recent stroke on the simulator than the old one.
  
@@ -72,7 +72,7 @@ Quantum Brush is basically a graphics software powered by quantum-computing-imag
 
 The combination of the stroke and the quantum brush that we choose, the result is this!
 
-![Example of Quantum Brush](https://github.com/moth-quantum/qb-dev/blob/processing-java/img/476522263-ea0f6bca-44ea-4cec-b8a0-cebab87d073d.png?raw=true)
+![Example of Quantum Brush](/screenshots/after.png)
 c.f. Image credit: [Pavilion by the Lake](https://www.metmuseum.org/art/collection/search/40429)
 	You can see the tech-savvy details on our paper and understand deeply about quantum-powered creativity!
     
