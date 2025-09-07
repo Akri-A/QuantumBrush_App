@@ -25,7 +25,7 @@ Quantum Brush is basically a graphics software powered by quantum-computing-imag
 
 1. Canvas
 
-![The image of Canvas](https://github.com/moth-quantum/qb-dev/blob/processing-java/img/476522204-e0411fc0-f9ef-46d3-91f3-b786657c070d.png?raw=true)
+![The image of Canvas](https://drive.google.com/file/d/1PVVYNW-3WLvvde402OR99hqQ4VHYThNk/view?usp=sharing)
    This is the place where your image/canvas is displayed and you interact with it by `mouseClicked` and `mouseDragged`. `mouseClicked` will create a yellow dot. `mouseDragged` will create a red line. Look at the screenshot above.
    Those elements are crucial for quantum algorithms, so treat it nicely.
 
