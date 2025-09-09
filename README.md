@@ -119,7 +119,7 @@ You can see all debugging results if you open up the `View Live Debug Log` under
             "max": 100,
             "default": 20 
         },
-        "Strenght": {
+        "Strength": {
             "type": "float",
             "min": 0.0,
             "max": 1.0,
