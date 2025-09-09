@@ -67,7 +67,7 @@ These instructions are primarily for MacOS. They will likely also work for Linux
 To update you will need to run a similar process, but this time using the `update.sh` file in the QuantumBrush folder.
  
 1. Open a terminal, as in step 2 above.
-2. Write `sh ~/Home/update.sh` (or copy-paste from here) and then press Enter to run the update script.
+2. Write `sh ~/QuantumBrush/update.sh` (or copy-paste from here) and then press Enter to run the update script.
 
 # Examples
 
