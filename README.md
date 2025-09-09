@@ -54,19 +54,20 @@ Quantum Brush is basically a graphics software powered by quantum-computing-imag
  When you click 'Run', Python process will run in the background. You can close the window and come back to actually apply the processed result on the divided section. If the result is satisfactory, press the 'Apply to Canvas' button.
 
 # Installation Instructions
-1. Look at the Release Tab right next to you.
-2. Click the latest release version.
-3. Click `install.sh` to download.
-4. When it’s installed, open up ’Terminal’ on your MacOS computer. (If you don’t know where it is, press command+Space, type terminal and press Enter)
-5. Open up the Finder window so that you can see the `install.sh` file.
-6. Type `sh ` (Don’t forget to add Space!) on the Terminal window.
-7. Drag `install.sh` from the Finder window and drop it on the Terminal window. You might see some weird path name is added next to `sh `. (e.g. `sh /astrydpark/download/install.sh`).
-8. Press Enter and follow the instructions on the Terminal window.
-   
-	e.g. If the installer shows `{someQuestion}? (Y/y)`, you can press `y` and Enter!
 
-9. After it install the program, you can choose whether the installer will set up the environment for you or not. Just press `y` for peaceful mind.
-10. For the update, you don't need to download another installation file. You can just simply browse through the `HOME/quantumbrush` folder, and repeat the number 3-8 on the Terminal window, only for `update.sh` file this time!
+These instructions are primarily for MacOS. They will likely also work for Linux.
+
+1. Download the install script `install.sh` [here](https://github.com/moth-quantum/QuantumBrush/releases/download/v0.0.3/install.sh).
+2. Open up the terminal. On a Mac, to open the ’Terminal’ app, press command+Space, type terminal and press Enter.
+3. Write `sh ~/Downloads/install.sh` (or copy-paste from here) and then press Enter to run the install script.
+4. If the installer shows `{someQuestion}? (Y/y)`, you can press `y` and Enter!
+5. After it install the program, you can choose whether the installer will set up the environment for you or not. Just press `y` for peaceful mind.
+6. The `QuantumBrush` folder can down be found in your Home folder.
+
+To update you will need to run a similar process, but this time using the `update.sh` file in the QuantumBrush folder.
+ 
+1. Open a terminal, as in step 2 above.
+2. Write `sh ~/Home/update.sh` (or copy-paste from here) and then press Enter to run the update script.
 
 # Examples
 
