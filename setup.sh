@@ -302,6 +302,7 @@ setup_python_environment() {
 
     # Create new environment
     print_step "Creating conda environment: quantumbrush"
+    conda tos accept # For updated ToS
     conda create -n quantumbrush python=3.11 -y
 
     # Install packages with specific version requirements
