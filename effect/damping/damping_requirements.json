@@ -27,15 +27,9 @@
         }
     },
     "stroke_input": {
-        "image_rgba": {
-            "type":"array"
-        },
-        "path": {
-            "type":"array"
-        },
-        "clicks": {
-            "type":"array"
-        }
+        "image_rgba": "array",
+        "path": "array",
+        "clicks": "array"
     },
     "flags": {
         "smooth_path": false
