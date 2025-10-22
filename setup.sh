@@ -101,11 +101,11 @@ install_java() {
             if command -v apt &> /dev/null; then
                 # Ubuntu/Debian
                 print_step "Installing OpenJDK via apt..."
-                sudo apt update && sudo apt install -y openjdk-17-jdk
+                sudo apt update && sudo apt install -y openjdk-21-jdk
             elif command -v dnf &> /dev/null; then
                 # Fedora/RHEL
                 print_step "Installing OpenJDK via dnf..."
-                sudo dnf install -y java-17-openjdk-devel
+                sudo dnf install -y java-21-openjdk-devel
             elif command -v pacman &> /dev/null; then
                 # Arch Linux
                 print_step "Installing OpenJDK via pacman..."
