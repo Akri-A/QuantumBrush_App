@@ -28,9 +28,10 @@ def get_circuits_with_vqe(params):
     """
 
     # --- User-controlled knobs (to integrate with the brush) ---
-    bond_distance = params["Bond Distance"] # 0.735         # Å
-    basis = params["Basis"] #  "sto3g"                # e.g., "sto3g", "6-31g", "cc-pVDZ", "def2-svp"
-    ORDERING = params["Ordering"] #  "Interleaved"       # 
+    bond_distance = params["user_input"]["Bond Distance"] # 0.735         # Å
+    basis = params["user_input"]["Basis"] #  "sto3g"                # e.g., "sto3g", "6-31g", "cc-pVDZ", "def2-svp"
+    ORDERING = params["user_input"]["Ordering"] #  "Interleaved"       # 
+    print(f"bond_distance={bond_distance}, basis={basis}, ORDERING={ORDERING}")
 
     # --- Define molecule (H₂ with chosen bond distance / basis) ---
     driver = PySCFDriver(
@@ -91,6 +92,7 @@ def get_circuits_with_vqe(params):
     solver = GroundStateEigensolver(mapper, vqe)
     # --- Solve ground-state problem ---
     result = solver.solve(problem)
+    print(len(all_circuits))
 
     return all_circuits
 
@@ -105,33 +107,41 @@ def get_chemical_colors(initial_angles,params):
     Returns:
         List of RGB color tuples
     """
-    try:
-        n_qubit = len(initial_angles)
-        print("initial angles",initial_angles)
+    # try:
+    n_qubit = len(initial_angles)*2
+    print("initial angles", initial_angles)
 
-        circuit= get_circuits_with_vqe(params)[-1] # last_one
-        # Note : not sure about the def of operators
-        operators = [SparsePauliOp(Pauli('I'*(n_qubit-i) + p + 'I'*i)) for p in ['X','Y','Z']  for i in range(n_qubit) ]
-        obs=utils.run_estimator(circuit, operators, backend=None)
+    base_circuit= get_circuits_with_vqe(params)[-1] # last_one
+    circuit = QuantumCircuit(n_qubit*base_circuit.num_qubits)
+    for i in range(n_qubit):
+        offset = 2 * i
+        qubits = [offset, offset + base_circuit.num_qubits]
+        circuit.compose(base_circuit, qubits=qubits, inplace=True)
+    # Note : not sure about the def of operators
+    operators = [SparsePauliOp(Pauli('I'*(n_qubit-i) + p + 'I'*i)) for p in ['X','Y','Z']  for i in range(n_qubit) ]
+    obs=utils.run_estimator(circuit, operators, backend=None)
 
-        x_expectations = obs[:n_qubit]
-        y_expectations = obs[n_qubit:2*n_qubit]
-        z_expectations = obs[2*n_qubit:]
+    print("OBSERVABLE", type(obs), obs)
+    # first qubit
+    x_expectations = [ obs[k//2] for k in range(0,n_qubit,2) ]
+    y_expectations = [ obs[k//2] for k in range(n_qubit,2*n_qubit,2) ]
+    z_expectations = [ obs[k//2] for k in range(2*n_qubit,3*n_qubit,2) ]
 
-        # phi = arctan2(Y, X)
-        phi_expectations = [np.arctan2(y,x) % (2 * np.pi) for x, y in zip(x_expectations, y_expectations)]
-        # theta = arccos(Z)
-        theta_expectations = [np.arctan2(np.sqrt(x**2 + y**2),z) for x, y, z in zip(x_expectations, y_expectations, z_expectations)]
+    # phi = arctan2(Y, X)
+    phi_expectations = [np.arctan2(y,x) % (2 * np.pi) for x, y in zip(x_expectations, y_expectations)]
+    # theta = arccos(Z)
+    theta_expectations = [np.arctan2(np.sqrt(x**2 + y**2),z) for x, y, z in zip(x_expectations, y_expectations, z_expectations)]
 
-        final_angles = list(zip(phi_expectations, theta_expectations))
+    final_angles = list(zip(phi_expectations, theta_expectations))
 
-        return final_angles
+    print("Final angle", type(final_angles), final_angles)
+    return final_angles
 
     
-    except Exception as e:
-        print(f"Quantum simulation failed: {e}")
+    # except Exception as e:
+    #     print(f"Quantum simulation failed: {e}")
 
-        return
+    #     return
 
 
 # The main function using Chemical model
@@ -166,14 +176,12 @@ def run(params):
     split_size = max(1, path_length // n_drops)
     split_paths = [path[i * split_size : (i + 1) * split_size] for i in range(n_drops - 1)]
     split_paths.append(path[(n_drops - 1) * split_size :])
-    print("test.")
     # Get the radius of the drop
     radius = params["user_input"]["Radius"]
     assert radius > 0, "Radius must be greater than 0"
 
     initial_angles = [] #(Theta,phi)
     pixels = []
-    print("test.")
     for lines in split_paths:
         region = utils.points_within_radius(lines, radius,border = (height, width))
 
@@ -186,7 +194,6 @@ def run(params):
         print("initial angle", (phi, theta))
         initial_angles.append((phi,theta))
         pixels.append((region, selection_hls))
-    print("test.")
     strength = params["user_input"]["Strength"]
     assert strength >= 0 and strength <= 1, "Strength must be between 0 and 1"
 
