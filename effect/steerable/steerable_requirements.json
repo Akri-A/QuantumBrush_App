@@ -1,0 +1,27 @@
+{
+    "name": "Steerable",
+    "id": "steerable",
+    "author": "LST",
+    "version": "1.0.0",
+    "description": "TODO",
+    "dependencies": {
+        "numpy": ">=2.1.0",
+        "qiskit": "",
+        "jax": "",
+        "pennylane": ""
+    },
+    "user_input": {
+        "Controls": {
+            "type": "int",
+            "min": 2,
+            "max": 3,
+            "default": 3
+        }
+    },
+    "stroke_input": {
+        "image_rgba": "array",
+        "clicks": "array",
+        "path": "array"
+    },
+    "flags": {}
+}

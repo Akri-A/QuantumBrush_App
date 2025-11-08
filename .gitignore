@@ -2,3 +2,5 @@
 install.sh
 .code-workspace
 test.ipynb
+metadata/*
+project/*
