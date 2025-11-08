@@ -1,9 +1,5 @@
 import numpy as np
-# from qiskit import QuantumCircuit, generate_preset_pass_manager
-# from qiskit.quantum_info import Pauli, SparsePauliOp, Statevector,partial_trace
-# from qiskit.circuit.library import RXGate, RZGate,XGate,ZGate,IGate,StatePreparation
 import importlib.util
-# from scipy.stats import circmean
 import jax
 import jax.numpy as jnp
 import pennylane as qml
@@ -11,6 +7,10 @@ import pennylane as qml
 spec = importlib.util.spec_from_file_location("utils", "effect/utils.py")
 utils = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(utils)
+
+spec = importlib.util.spec_from_file_location("steer_example", "effect/steerable/steer_example.py")
+steer_example = importlib.util.module_from_spec(spec)
+spec.loader.exec_module(steer_example)
 
 """
 Utility functions for Hamiltonians
@@ -107,55 +107,161 @@ def pauli_op_n_qubits(n_qubits):
         observable.append(pauli_op_single_qubit(qml.PauliZ, target, n_qubits))
     return observable
 
-def create_circuit_and_get_color(source_colors,target_colors,input_colors,n_qubits):
-    dev = qml.device("default.qubit", wires=n_qubits)
-    @qml.qnode(dev)
-    def evolve_and_measure(H, t,):
-        n_qb = len(H.wires)
-        qml.evolve(H, t)
-        obs = pauli_op_n_qubits(n_qb)
-        return [qml.expval(op) for op in obs]
-
-    # create Hamiltonian
-    key = jax.random.PRNGKey(0)
-    key, mlpkey = jax.random.split(key)
-    params = init_mlp_params(mlpkey, [1, 16, 1])
-    H = H_t(params, 1., n_qubits, steps=10)
-    t = 0.5
-
-    bloch_vec = jnp.array(evolve_and_measure(H, t))
-    print("Bloch vector:", bloch_vec)
-    color = (bloch_vec + 1) / 2
-    print("Color:", color)
-    return color
-
 """
 Utility functions for colors
 """
-def sv_to_color(sv_color):
-    magnitude = np.linalg.norm(sv_color, axis=1, keepdims=True)  # shape (3,1)
-    color_normalize = sv_color / magnitude 
-    color_shift = (color_normalize + 1) / 2
-    return magnitude, np.clip(color_shift, 0, 1)
 
-def color_to_sv(color,magnitude):
-    color_shift = 2*color-1
-    return magnitude*color_shift
+def pixels_to_angles(pixel_vectors):
+    """
+    Convert an array of RGB pixel vectors into rotation angles using SVD.
 
-def create_dominant_colors(nb_controls,image,region):   
-    # Get the RGB values of the copy region
-    selection = image[region[:, 0], region[:, 1],:3]
-    selection = selection.astype(np.float32) / 255.0
+    The angles returned convert these 3-D directions into spherical angles
+    (theta, phi), suitable for parameterizing qubit rotations.
 
-    # SVD
-    U, S, Vt = np.linalg.svd(selection, full_matrices=False)
-    print(f"Shapes: U: {U.shape}, S: {S.shape}, Vt: {Vt.shape}")    
-    dominant_colors = (S[:, None] * Vt).T  # shape (3,3)
-    magnitudes, dominant_colors = sv_to_color(dominant_colors) 
-    print("Dominant_colors :)")
-    for k in range(nb_controls):
-        print(f"color {k+1}: {dominant_colors[k]}")
-    return U, magnitudes, dominant_colors
+    Parameters
+    ----------
+    pixel_vectors : array-like, shape (N, 3)
+        N RGB vectors (3-tuples valued in [0, 1]).
+    eps : float
+        Small stabilizer to avoid log(0).
+
+    Returns
+    -------
+    angles : list of float, length 8.
+    """
+
+    pixel_vectors = np.asarray(pixel_vectors)
+    if pixel_vectors.ndim != 2 or pixel_vectors.shape[1] != 3:
+        raise ValueError("pixel_vectors must be of shape (N, 3).")
+
+    # SVD: Vt rows represent orthonormal color directions (principal components)
+    U, S, Vt = np.linalg.svd(pixel_vectors, full_matrices=False)
+
+    def to_spherical(v):
+        """Map a 3D direction to spherical angles (theta, phi)."""
+        v = v / np.linalg.norm(v)
+        x, y, z = v
+        phi = np.arctan2(y, x)
+        theta = np.arccos(z) 
+        return theta, phi
+
+    # 1 pair from global singular values
+    angles = list(to_spherical(np.log(S)))
+    print(f"Dominant values (S): {S}")
+
+    # 3 pairs from color basis directions (rows of Vt)
+    print("Dominant colors (rows of Vt):")
+    for color_dir in Vt:
+        angles.extend(to_spherical(color_dir))
+        print(color_dir)
+
+    return angles
+
+def selection_to_angles(image, region):
+    pixels = image[region[:, 0], region[:, 1],:3]
+    pixels = pixels.astype(np.float32) / 255.0
+    return pixels_to_angles(pixels)
+
+def measures_to_pixels(template, measures, nb_controls):
+    """
+    Reconstruct a pixel vector/matrix from measured angles via SVD.
+
+    Parameters
+    ----------
+    template : array-like, shape (N, 3)
+    measures : array-like, shape (12,)
+        Measured values:
+        - measures[:3] -> log-scaled singular values
+        - measures[3:] -> flattened 3x3 matrix (rows of V^T)
+
+    Returns
+    -------
+    reconstructed : ndarray, shape (N, 3)
+        Reconstructed pixel vectors using the measured S and V^T.
+    """
+    template = np.asarray(template)
+    measures = np.asarray(measures)
+    
+    if measures.size != 3*nb_controls:
+        raise ValueError(f"measures must be of length {3*nb_controls} (3 singular values + {3*(nb_controls-1)} matrix entries).")
+    
+    U, S, Vt = np.linalg.svd(template, full_matrices=False)
+    x,y,z = np.log(S)
+    r = np.linalg.norm([x,y,z])
+    mean_S = [np.mean(S)] * 3
+    s_values = measures[:3]
+    s_values_r = np.linalg.norm(s_values)
+    if s_values_r < 10**-10:
+        s_values = mean_S
+    else:
+        s_values = s_values_r * np.exp( np.array(s_values) * r / s_values_r  ) + (1-s_values_r) * np.mean(S)
+    new_S = np.diag(s_values)
+    print(f"New dominant values (S): {s_values}")
+
+    measured_Vt = measures[3:].reshape(nb_controls - 1, 3).copy()
+    new_Vt = np.zeros((3, 3))
+    print("New dominant colors (rows of Vt):")
+    for i in range(3):
+        if i < nb_controls - 1:
+            new_Vt[i] = np.linalg.norm(Vt[i]) * measured_Vt[i]
+        else:
+            new_Vt[i] = Vt[i]
+        print(new_Vt[i])
+    reconstructed = U @ new_S @ new_Vt
+    return reconstructed
+
+def YZEmbedding(angles, wires):
+    angles = np.asarray(angles)
+    angles = angles.reshape(len(wires), 2)
+    qml.AngleEmbedding(angles[:, 0], wires=wires, rotation="Y")
+    qml.AngleEmbedding(angles[:, 1], wires=wires, rotation="Z")
+
+"""
+Mesurement
+"""
+def create_circuit_and_measure(params, source_angles, target_angles, input_angles, n_qubits):
+    #  angles: array-like, shape (2*n_qubit,) 
+    #         A flattened array containing 2*n_qubit angle values, representing
+    #         n pairs of (theta, phi) rotation angles.
+    dev = qml.device("default.qubit", wires=n_qubits)
+    T = params["user_input"]["max T"]
+    n_T = params["user_input"]["timesteps"]
+    dt = T/n_T
+    print(f"T={T}, n_T={n_T}, dt={dt}")
+     
+    @qml.qnode(dev)
+    def evolve_and_measure_with_input_angles(H, t, angles_input):
+        n_q = len(angles_input)//2
+        # Apply input embedding
+        YZEmbedding(angles_input, wires=range(n_q))
+        print("angles_input:", angles_input)
+        print("len(angles_input)//2:", len(angles_input)//2)
+    
+        # Time evolution
+        qml.ApproxTimeEvolution(H, t, n_T)
+        
+        # Measurements
+        obs = pauli_op_n_qubits(n_q)
+        print("Observables:", obs)
+        return [qml.expval(op) for op in obs]
+    
+    # # create Hamiltonian
+    H = None
+    if params["user_input"]["Test"] :
+        key = jax.random.PRNGKey(0)
+        key, mlpkey = jax.random.split(key)
+        params0 = init_mlp_params(mlpkey, [1, 16, 1])
+        H = H_t(params0, 1., n_qubits, steps=10)
+    else : # First example without learning
+        H0_op, H1_op = steer_example.build_H_ops(n_qubits)
+        u = 2
+        H = H0_op + u * H1_op
+    t = params["user_input"]["t"]*T
+    print(f"t={t}")
+    measures = jnp.array(evolve_and_measure_with_input_angles(H, t, source_angles))
+
+    print("Bloch vector measures (XYZ):", measures)
+    return measures
 
 """
 Brush execution 
@@ -198,22 +304,19 @@ def run(params):
     # Create the regions (source and target)
     region_s = utils.points_within_lasso(path, border = (height, width))
     region_t = utils.points_within_lasso(path + offset, border = (height, width))
-    U_s, magnitudes_s, dominant_colors_s = create_dominant_colors(nb_controls,image,region_s)
-    _, _, dominant_colors_t = create_dominant_colors(nb_controls,image,region_t)
 
-    output_colors = create_circuit_and_get_color(dominant_colors_s,dominant_colors_t,dominant_colors_s,nb_controls)
-    new_dominant_colors = output_colors.reshape(nb_controls, 3)
-    new_dominant_colors = color_to_sv(new_dominant_colors, magnitudes_s)
-    print("New dominant_colors :)")
-    for k in range(nb_controls):
-        print(f"color {k+1}: {new_dominant_colors[k]}")
-    combined_colors = new_dominant_colors 
-    if nb_controls<3:
-        less_dominant_colors = (S[nb_controls:] * Vt[nb_controls:]).T  # shape (3, 3-K)
-        combined_colors = np.hstack([new_dominant_colors.T, less_dominant_colors])  # shape (3,3)
-    paste_selection = U_s @ combined_colors 
+    ####### test
+    print("=== Computing angles from source ===")
+    angles_s = selection_to_angles(image, region_s)
+    print("=== Computing angles from target ===")
+    angles_t = selection_to_angles(image, region_t)
+    output_measures = create_circuit_and_measure(params, angles_s[:nb_controls*2], angles_t[:nb_controls*2], angles_s[:nb_controls*2], nb_controls)
 
+    region_in = region_s
+    pixels = image[region_in[:, 0], region_in[:, 1],:3]
+    pixels = pixels.astype(np.float32) / 255.0
+    new_pixels = measures_to_pixels(pixels, output_measures,nb_controls)
     paste_region = utils.points_within_lasso(path + offset, border = (height, width))
-    image[paste_region[:, 0], paste_region[:, 1],:3] = (paste_selection * 255).astype(np.uint8)
-    
+    image[paste_region[:, 0], paste_region[:, 1],:3] = (new_pixels * 255).astype(np.uint8)
+
     return image

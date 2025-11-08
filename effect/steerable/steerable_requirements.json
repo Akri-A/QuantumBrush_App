@@ -14,8 +14,28 @@
         "Controls": {
             "type": "int",
             "min": 2,
-            "max": 3,
+            "max": 4,
             "default": 3
+        },
+        "timesteps": {
+            "type": "int",
+            "min": 2,
+            "default": 2
+        },
+        "max T": {
+            "type": "int",
+            "min": 1,
+            "default": 1
+        },
+        "t": {
+            "type": "float",
+            "min": 0.0,
+            "max": 1.0,
+            "default": 0.5
+        },
+        "Test": {
+            "type": "bool",
+            "default": 0
         }
     },
     "stroke_input": {
