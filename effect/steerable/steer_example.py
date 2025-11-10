@@ -1,208 +1,187 @@
 # %%
-import pennylane as qml
 import jax
 import jax.numpy as jnp
-from jax import random, grad, jit
+import jax.random as jr
+import optax
+import equinox as eqx
+import pennylane as qml
 from functools import partial
+import matplotlib.pyplot as plt
+from utils.helper import *
+
 
 jax.config.update("jax_enable_x64", True)
 
-# ================================================================
-# 1. Hamiltonian definitions
-# ================================================================
-def build_H_ops(n_qubits):
-    """Build standard H0 (mixer) and H1 (nearest-neighbor Ising)."""
-    H0 = sum(qml.PauliX(i) for i in range(n_qubits))
-    H1 = sum(qml.PauliZ(i) @ qml.PauliZ(i + 1) for i in range(n_qubits - 1))
+# %%
+n_qubits = 2
+
+
+key = jr.PRNGKey(0)
+
+## Chooce Your Hamiltonian Ansatz
+def build_hamiltonians(n_qubits, key = jr.PRNGKey(0)): 
+    if n_qubits == 2:
+        H0 = sum(qml.PauliZ(i) for i in range(2))
+        H1 = qml.PauliX(0) @ qml.PauliX(1)
+    else: 
+        key,  Jkey = jr.split(key, 2)
+        omega = 1.0 + 0.1 * jnp.arange(n_qubits)
+        J =  jax.random.uniform(key=Jkey, shape=(n_qubits-1), minval=0.05, maxval=0.5)
+        H0 = sum(omega[i]*qml.PauliZ(i) for i in range(n_qubits))
+        H1 = sum(J[i]*qml.PauliX(i)@qml.PauliX(i+1) for i in range(n_qubits-1))
+        
     return H0, H1
 
-
-# ================================================================
-# 2. MLP control u_theta(t)
-# ================================================================
-def init_mlp_params(key, hidden1=32, hidden2=32):
-    """Initialize weights and biases for a 2-layer MLP."""
-    k1, k2, k3 = random.split(key, 3)
-    params = {
-        "W1": random.normal(k1, (hidden1, 1)) * 0.5,
-        "b1": jnp.zeros((hidden1,)),
-        "W2": random.normal(k2, (hidden2, hidden1)) * 0.5,
-        "b2": jnp.zeros((hidden2,)),
-        "W3": random.normal(k3, (1, hidden2)) * 0.5,
-        "b3": jnp.zeros((1,)),
-    }
-    return params
+key, Hkey = jr.split(key)
+H0, H1 = build_hamiltonians(n_qubits, Hkey)
 
 
-def mlp_u(params, t):
-    """Scalar control u_theta(t) from 2-layer MLP."""
-    t_in = jnp.array([[t]])
-    h1 = jnp.tanh(params["W1"] @ t_in + params["b1"][:, None])
-    h2 = jnp.tanh(params["W2"] @ h1 + params["b2"][:, None])
-    out = params["W3"] @ h2 + params["b3"][:, None]
-    return out.squeeze()
+# %%
+
+## Set your input state
+# initial_state = jnp.array([0.8, 0.6, 0.0, 0.0])
+# target_state = jnp.array([0.0, 0.0, -0.6j, 0.8])
+
+key, inkey, outkey = jr.split(key, 3)
+initial_state = jr.normal(inkey, shape=(2**n_qubits))
+target_state = jr.normal(outkey, shape=(2**n_qubits))
 
 
-vmap_mlp_u = jax.vmap(lambda t, p: mlp_u(p, t), in_axes=(0, None))
+initial_state /= jnp.linalg.norm(initial_state)
+target_state /= jnp.linalg.norm(target_state)
 
+# %%
+n_epochs = 1000
+n_steps = 40
+T = 1.0
+lr = 0.02
 
-# ================================================================
-# 3. Quantum time evolution (QNode)
-# ================================================================
-def make_qnode(n_qubits, n_steps, T):
-    """Build a QNode that evolves psi0 under H(t) = H0 + u(t)H1."""
+## 
+key, mlpkey = jax.random.split(key)
 
-    dev = qml.device("default.qubit", wires=n_qubits)
-    H0_op, H1_op = build_H_ops(n_qubits)
+model = eqx.nn.MLP(
+    in_size='scalar', out_size='scalar', depth=2, width_size=32, activation=jax.nn.tanh, key=mlpkey
+)
+optimizer = optax.adam(learning_rate=lr)
+opt_state = optimizer.init(eqx.filter(model, eqx.is_array))
+
+# %%
+dev = qml.device("default.qubit", wires=n_qubits)
+@qml.qnode(dev)
+def splitting_circuit(model, initial_state, T=1.0, n_steps=40, n= 1):
+    """ 
+    model: control NN
+    initial_state: Initial Quantum State
+    H0, H1: Hamiltanians
+    T: final time
+    n_steps: time steps
+    n: trotterizaiton order
+    """
     dt = T / n_steps
+    qml.StatePrep(initial_state, wires=range(n_qubits))
+    for k in range(n_steps):
+        t_k = k * dt
+        u_k = model(jnp.array(t_k))
+        # Strang-splitting time step
+        qml.ApproxTimeEvolution(H0, dt/2, n)
+        qml.ApproxTimeEvolution(u_k * H1, dt, n)
+        qml.ApproxTimeEvolution(H0, dt/2, n)
+    return qml.state()
+
+
+@eqx.filter_jit
+def loss_fn(model, inital_state, target_state, T=1.0, n_steps=40, C= 3e-4):
+    psi = splitting_circuit(model, inital_state, T, n_steps)
+    fidelity = quantum_fidelity(psi, target_state)
+    ## 
+    ts = jnp.linspace(0, T, n_steps)
+    integral = jax.scipy.integrate.trapezoid(jax.vmap(model)(ts)**2, ts)
+    return 1 - fidelity + C*integral
+
+
+# %%
+@eqx.filter_jit
+def make_step(model, opt_state, initial_state, target_state, T=1.0, n_steps=40):
+    loss, grads = eqx.filter_value_and_grad(loss_fn)(model, initial_state, target_state, T, n_steps)
+    updates, opt_state = optimizer.update(grads, opt_state)
+    model = eqx.apply_updates(model, updates)
+    return model, opt_state, loss
+
+
+for step in range(n_epochs):
+    model, opt_state, loss = make_step(model, opt_state, initial_state, target_state)
+    if step % (n_epochs // 10) == 0:
+        print(f"Step {step:03d}: loss = {loss:.6f}")
+
+rho_f = splitting_circuit(model, initial_state, T, n_steps)
+print("Final fidelity:", quantum_fidelity(rho_f, target_state))
+
+
+# %%
+def simulate_trajectory(model, initial_state, n_steps=40, T=1.0):
+    dt = T / n_steps
+    dev = qml.device("default.qubit", wires=n_qubits)
 
     @qml.qnode(dev)
-    def step_evolution(u_k, psi_in):
-        """Single time-step evolution."""
+    def step_evolution(psi_in, u_k):
         qml.StatePrep(psi_in, wires=range(n_qubits))
-        H_t = H0_op + u_k * H1_op
-        qml.ApproxTimeEvolution(H_t, dt, 1)
+        qml.ApproxTimeEvolution(H0, dt/2, 1)
+        qml.ApproxTimeEvolution(u_k * H1, dt, 1)
+        qml.ApproxTimeEvolution(H0, dt/2, 1)
         return qml.state()
 
-    def evolve(u_vals, psi0):
-        """Full evolution across time steps."""
-        psi = psi0
-        states = [psi0]
-        for k in range(len(u_vals)):
-            psi = step_evolution(u_vals[k], psi)
-            states.append(psi)
-        return jnp.stack(states)
+    psi = initial_state
+    states = [psi]
 
-    def evolve_to_time(params, psi0, t):
-        """Evolve psi0 up to arbitrary time t using learned u_theta(t)."""
-        n_steps_t = 50
-        ts = jnp.linspace(0.0, t, n_steps_t)
-        u_vals = vmap_mlp_u(ts, params)
-        psi = psi0
-        for u_k in u_vals:
-            psi = step_evolution(u_k, psi)
-        return psi
+    for k in range(n_steps):
+        t_k = k * dt
+        u_k = model(jnp.array(t_k))
+        psi = step_evolution(psi, u_k)
+        # normalize for safety
+        psi = psi / jnp.linalg.norm(psi)
+        states.append(psi)
+    
+    return jnp.stack(states)
 
-    # function to visualize final circuit
-    def circuit_diagram(u_vals, psi0):
-        """Return the circuit diagram for the final trained evolution."""
-        @qml.qnode(dev)
-        def full_evolution():
-            qml.StatePrep(psi0, wires=range(n_qubits))
-            for u_k in u_vals:
-                H_t = H0_op + u_k * H1_op
-                qml.ApproxTimeEvolution(H_t, dt, 1)
-            return qml.state()
-        return qml.draw(full_evolution)()
+# %%
+trajectory_fidelity = jax.vmap(quantum_fidelity, in_axes=(0, None))
+states = simulate_trajectory(model, initial_state, n_steps=40, T=1.0)
 
-    return evolve, evolve_to_time, circuit_diagram
+fidelities = trajectory_fidelity(states, target_state)
+print(f"Final fidelity: {fidelities[-1]:.6f}")
 
+# %%
 
-# ================================================================
-# 4. Loss and optimization
-# ================================================================
-def fidelity_loss_from_params(params, evolve_fn, psi0, target, times):
-    """1 - fidelity loss between final evolved state and target."""
-    u_vals = vmap_mlp_u(times, params)
-    states = evolve_fn(u_vals, psi0)
-    psi_final = states[-1]
-    overlap = jnp.vdot(target, psi_final)
-    fidelity = jnp.abs(overlap) ** 2
-    return 1.0 - fidelity
+times = jnp.linspace(0, 1.0, len(fidelities))
+controls = jax.vmap(model)(times)
+
+plt.figure(figsize=(10,4))
+
+plt.subplot(1,2,1)
+plt.plot(times, fidelities)
+plt.xlabel("Time")
+plt.ylabel("Fidelity")
+plt.title("State Fidelity over Time")
+
+plt.subplot(1,2,2)
+plt.plot(times, controls)
+plt.xlabel("Time")
+plt.ylabel("Control u(t)")
+plt.title("Learned Control Pulse")
+
+plt.tight_layout()
+plt.show()
 
 
-@partial(jit, static_argnums=(1,))
-def train_step(params, evolve_fn, psi0, target, times, lr=0.1):
-    """Single optimization step."""
-    grads = grad(fidelity_loss_from_params)(params, evolve_fn, psi0, target, times)
-    params = jax.tree.map(lambda p, g: p - lr * g, params, grads)
-    loss = fidelity_loss_from_params(params, evolve_fn, psi0, target, times)
-    return params, loss
+# %%
+print(qml.draw(splitting_circuit)(model, initial_state, T=T, n_steps=n_steps))
 
 
-# ================================================================
-# 5. Example run: Quantum Neural ODE training
-# ================================================================
-def example_run(
-    n_qubits=2,
-    n_steps=25,
-    T=1.0,
-    hidden1=32,
-    hidden2=32,
-    iters=60,
-    lr=0.1,
-    seed=0,
-):
-    key = random.PRNGKey(seed)
-    params = init_mlp_params(key, hidden1, hidden2)
-    times = jnp.linspace(0.0, T, n_steps)
-
-    # Create evolution functions
-    evolve_fn, evolve_to_time_fn, circuit_fn = make_qnode(n_qubits, n_steps, T)
-
-    # Initial state |+>^n
-    plus = jnp.array([1.0, 1.0]) / jnp.sqrt(2.0)
-    psi0 = plus
-    for _ in range(n_qubits - 1):
-        psi0 = jnp.kron(psi0, plus)
-    psi0 = psi0.astype(jnp.complex128)
-
-    # Target |00...0>
-    dim = 2**n_qubits
-    target = jnp.zeros((dim,), dtype=jnp.complex128).at[0].set(1.0)
-
-    print("Initial loss:", float(fidelity_loss_from_params(params, evolve_fn, psi0, target, times)))
-
-    # Training loop
-    for it in range(iters):
-        params, loss = train_step(params, evolve_fn, psi0, target, times, lr=lr)
-        if it % max(1, iters // 10) == 0:
-            print(f"Iter {it:4d} | loss = {float(loss):.6f}")
-
-    print("\nFinal loss:", float(fidelity_loss_from_params(params, evolve_fn, psi0, target, times)))
-
-    # ------------------------------------------------------------
-    # After training: evolve with learned control
-    # ------------------------------------------------------------
-    u_vals = vmap_mlp_u(times, params)
-    states = evolve_fn(u_vals, psi0)
-    psi_final = states[-1]
-    fidelity = jnp.abs(jnp.vdot(target, psi_final)) ** 2
-
-    print("\n=== Learned control u(t) ===")
-    print(u_vals)
-
-    print("\n=== Final Results ===")
-    print(f"Final ψ(T): {psi_final}")
-    print(f"Fidelity with target |0...0>: {float(fidelity):.6f}")
-
-    # ------------------------------------------------------------
-    # NEW FEATURE: evaluate ψ(t) at arbitrary time
-    # ------------------------------------------------------------
-    t_query = 0.5 * T
-    psi_half = evolve_to_time_fn(params, psi0, t_query)
-    print(f"\nψ(t={t_query}) = {psi_half}")
-
-    # ------------------------------------------------------------
-    # NEW FEATURE: print final quantum circuit
-    # ------------------------------------------------------------
-    print("\n=== Final Quantum Circuit (trained control) ===")
-    print(circuit_fn(u_vals, psi0))
-
-    return params, times, u_vals, psi_final, fidelity, evolve_to_time_fn
+# %%
 
 
-# ================================================================
-# 6. Run example
-# ================================================================
-if __name__ == "__main__":
-    params_opt, times_grid, u_vals, psi_final, fidelity, evolve_to_time_fn = example_run(
-        n_qubits=2, n_steps=20, T=1.0, hidden1=32, hidden2=32, iters=50, lr=0.1, seed=42
-    )
+# %%
+visualize_bloch_trajectories(states, target_state, n_qubits)
 
-    # Example: get evolved ψ(t) at arbitrary time
-    t_test = 0.75
-    plus = jnp.array([1.0, 1.0]) / jnp.sqrt(2.0)
-    psi0 = jnp.kron(plus, plus).astype(jnp.complex128)
-    psi_t = evolve_to_time_fn(params_opt, psi0, t_test)
-    print(f"\nEvolved state ψ(t={t_test:.2f}):\n{psi_t}")
+
+
