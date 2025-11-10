@@ -1,2 +1,3 @@
 QNODE
 **/*.ipynb
+**/__pycache__/
