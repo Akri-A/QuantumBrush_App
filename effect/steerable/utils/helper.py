@@ -1,3 +1,10 @@
+#
+# @Author: chih-kang-huang
+# @Date: 2025-11-10 21:30:57 
+# @Last Modified by:   chih-Kang-huang
+# @Last Modified time: 2025-11-10 21:30:57 
+#
+
 import jax.numpy as jnp 
 import pennylane as qml
 import matplotlib.pyplot as plt
@@ -22,7 +29,7 @@ def von_neumann_entropy(rho):
 X = jnp.array(qml.matrix(qml.PauliX(0)))
 Y = jnp.array(qml.matrix(qml.PauliY(0)))
 Z = jnp.array(qml.matrix(qml.PauliZ(0)))
-I = jnp.eye(2, dtype=jnp.complex64)
+I = jnp.eye(2)
 
 def bloch_vector(rho):
     """Compute Bloch vector for single-qubit density matrix."""

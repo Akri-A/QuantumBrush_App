@@ -1,3 +1,14 @@
+'''
+Author: Chih-Kang Huang && chih-kang.huang@hotmail.com
+Date: 2025-11-10 18:59:22
+LastEditors: Chih-Kang Huang && chih-kang.huang@hotmail.com
+LastEditTime: 2025-11-10 22:51:01
+FilePath: /steerable/steer_example.py
+Description: 
+
+
+'''
+
 # %%
 import jax
 import jax.numpy as jnp
@@ -8,7 +19,6 @@ import pennylane as qml
 from functools import partial
 import matplotlib.pyplot as plt
 from utils.helper import *
-
 
 jax.config.update("jax_enable_x64", True)
 
@@ -174,7 +184,29 @@ plt.show()
 
 
 # %%
-print(qml.draw(splitting_circuit)(model, initial_state, T=T, n_steps=n_steps))
+# Transpiler to universal gates
+from pennylane.transforms import decompose
+
+dev = qml.device('default.qubit')
+allowed_gates = {qml.U3, qml.CNOT}
+
+@partial(decompose, gate_set=allowed_gates)
+#@qml.compile
+@qml.qnode(dev)
+def circuit():
+    dt = 1/n_steps
+
+    qml.StatePrep(initial_state, wires=range(n_qubits)) 
+    for k in range(n_steps):
+        t_k = k * dt
+        u_k = model(jnp.array(t_k))
+        # Strang-splitting time step
+        qml.ApproxTimeEvolution(H0, dt/2, 1)
+        qml.ApproxTimeEvolution(u_k * H1, dt, 1)
+        qml.ApproxTimeEvolution(H0, dt/2, 1)
+    
+    return qml.state()
+print(qml.draw(circuit)())
 
 
 # %%
