@@ -28,7 +28,7 @@ n_qubits = 2
 
 key = jr.PRNGKey(0)
 
-## Chooce Your Hamiltonian Ansatz
+## Choose Your Hamiltonian Ansatz
 def build_hamiltonians(n_qubits, key = jr.PRNGKey(0)): 
     if n_qubits == 2:
         H0 = sum(qml.PauliZ(i) for i in range(2))
