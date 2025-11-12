@@ -1,1 +1,1 @@
-/home/ting/miniforge3/envs/quantumbrush/bin/python
+/root/miniforge/envs/quantumbrush/bin/python
