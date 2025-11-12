@@ -1,3 +1,13 @@
+'''
+Author: Chih-Kang Huang && chih-kang.huang@hotmail.com
+Date: 2025-11-11 15:45:26
+LastEditors: Chih-Kang Huang && chih-kang.huang@hotmail.com
+LastEditTime: 2025-11-11 18:48:42
+FilePath: /steerable/steer_training.py
+Description: 
+
+
+'''
 import jax
 import jax.numpy as jnp
 import jax.random as jr
