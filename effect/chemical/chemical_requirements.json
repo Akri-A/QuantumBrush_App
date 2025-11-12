@@ -6,7 +6,7 @@
     "long_description": "TODO",
     "description": "TODO",
     "dependencies": {
-        "numpy": ">=2.1.0",
+        "numpy": "",
         "colorsys": "",
         "json": "",
         "scipy": "",
