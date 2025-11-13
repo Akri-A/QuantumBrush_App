@@ -1,6 +1,3 @@
-# %%
-# %%
-# %%
 #
 # @Author: chih-kang-huang
 # @Date: 2025-11-10 21:30:57 
@@ -17,7 +14,7 @@ import equinox as eqx
 import pennylane as qml
 from functools import partial
 import matplotlib.pyplot as plt
-from utils import *
+from helper import *
 from models import *
 
 #jax.config.update("jax_enable_x64", True)
@@ -40,29 +37,41 @@ def build_hamiltonians(n_qubits, key = jr.PRNGKey(0)):
             qml.PauliX(0)
         ]
     elif n_qubits == 2:
-        omega = jnp.array([1, 1.3])
-        J = jnp.array([0.5])
         H_list = [
-            qml.PauliZ(0) @ qml.PauliZ(1),
-            qml.PauliY(0) @ qml.Identity(1),
+            H0, 
             qml.PauliX(0) @ qml.Identity(1),
+            qml.Identity(0) @ qml.PauliY(1),
         ]
     elif n_qubits == 3: 
     #    omega = jnp.array([1, 1.1, 1.2])
         J = jnp.array([0.2, 0.13])
     #    H0 = sum(omega[i]*qml.PauliZ(i) for i in range(n_qubits))
     #    H1 = sum(J[i]*qml.PauliX(i)@qml.PauliX(i+1) for i in range(n_qubits-1))
-        H_list  = [
-            qml.PauliZ(0) @ qml.PauliZ(1) + qml.PauliZ(1) @ qml.PauliZ(2),
-            qml.PauliY(0) @ qml.Identity(1) @ qml.Identity(2),
+        #H_list  = [
+        #    qml.PauliZ(0) @ qml.PauliZ(1) + qml.PauliZ(1) @ qml.PauliZ(2),
+        #    qml.PauliY(0) @ qml.Identity(1) @ qml.Identity(2),
+        #    qml.PauliX(0) @ qml.Identity(1) @ qml.Identity(2),
+        #    sum(J[i]*qml.PauliX(i)@qml.PauliX(i+1) for i in range(n_qubits-1)),
+        #]
+        H_list = [
+            H0,
             qml.PauliX(0) @ qml.Identity(1) @ qml.Identity(2),
-            sum(J[i]*qml.PauliX(i)@qml.PauliX(i+1) for i in range(n_qubits-1)),
+            qml.Identity(0) @ qml.PauliY(1) @ qml.Identity(2),
+            qml.Identity(0) @ qml.Identity(1) @ qml.PauliX(2),
         ]
-    #if n_qubits == 4: 
+    if n_qubits == 4: 
     #    omega = jnp.array([1, 1.12, 0.9, 1.3])
     #    J = jnp.array([0.2, 0.15, 0.27])
     #    H0 = sum(omega[i]*qml.PauliZ(i) for i in range(n_qubits))
     #    H1 = sum(J[i]*qml.PauliX(i)@qml.PauliX(i+1) for i in range(n_qubits-1))
+        H_list = [
+            H0,
+            qml.PauliX(0) @ qml.Identity(1) @ qml.Identity(2) @ qml.Identity(3),
+            qml.Identity(0) @ qml.PauliY(1) @ qml.Identity(2) @ qml.Identity(3),
+            qml.Identity(0) @ qml.Identity(1) @ qml.PauliX(2) @ qml.Identity(3),
+            qml.Identity(0) @ qml.Identity(1) @ qml.PauliY(2) @ qml.Identity(3) ,
+            qml.Identity(0) @ qml.Identity(1) @ qml.Identity(2) @ qml.PauliX(3) ,
+        ]
     #if True: 
     #    omegas = jnp.linspace(1.0, 1.0 + 0.3*(n_qubits-1), n_qubits)
     #    J = 0.3 
@@ -71,11 +80,7 @@ def build_hamiltonians(n_qubits, key = jr.PRNGKey(0)):
     #    H1 = sum(qml.PauliX(k) for k in range(n_qubits))
     #    H1 += 0.2 * sum(qml.PauliX(k)@qml.PauliY(k+1) for k in range(n_qubits-1))
     else: 
-        key,  Jkey = jr.split(key, 2)
-        omega = 1.0 + 0.1 * jnp.arange(n_qubits)
-        J =  jax.random.uniform(key=Jkey, shape=(n_qubits-1), minval=0.05, maxval=0.5)
-        H0 = sum(omega[i]*qml.PauliZ(i) for i in range(n_qubits))
-        H1 = sum(J[i]*qml.PauliX(i)@qml.PauliX(i+1) for i in range(n_qubits-1))
+        raise AssertionError("Not implemented yet")
         
     return H_list
 

@@ -1,9 +1,13 @@
-#
-# @Author: chih-kang-huang
-# @Date: 2025-11-10 21:30:57 
-# @Last Modified by:   chih-Kang-huang
-# @Last Modified time: 2025-11-10 21:30:57 
-#
+'''
+Author: Chih-Kang Huang && chih-kang.huang@hotmail.com
+Date: 2025-11-11 15:45:26
+LastEditors: Chih-Kang Huang && chih-kang.huang@hotmail.com
+LastEditTime: 2025-11-13 21:42:58
+FilePath: /steerable/to_delete_before_submission/utils/helper.py
+Description: 
+
+
+'''
 
 import jax.numpy as jnp 
 import pennylane as qml
@@ -17,7 +21,6 @@ def quantum_fidelity(psi, rho):
     psi = psi/jnp.linalg.norm(psi)
     rho = rho /jnp.linalg.norm(rho)
     return jnp.abs(jnp.vdot(psi, rho))**2
-
 
 ### Visualization
 def von_neumann_entropy(rho):

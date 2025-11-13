@@ -2,8 +2,8 @@
 Author: Chih-Kang Huang && chih-kang.huang@hotmail.com
 Date: 2025-11-13 08:14:18
 LastEditors: Chih-Kang Huang && chih-kang.huang@hotmail.com
-LastEditTime: 2025-11-13 08:45:00
-FilePath: /steerable/utils.py
+LastEditTime: 2025-11-13 22:48:27
+FilePath: /steerable/helper.py
 Description: 
 
 
@@ -134,3 +134,54 @@ def visualize_bloch_trajectories(states, target_state, n_qubits):
 
     plt.tight_layout()
     plt.show()
+
+def build_hamiltonians(n_qubits): 
+    H0 = sum(qml.PauliX(i) @ qml.PauliX(i+1) for i in range(n_qubits-1))   
+    H0 += sum(qml.PauliY(i) @ qml.PauliY(i+1) for i in range(n_qubits-1))  
+    H0 += sum(qml.PauliZ(i) @ qml.PauliZ(i+1) for i in range(n_qubits-1))
+
+    if n_qubits == 1: 
+        H_list  = [
+            qml.PauliZ(0),
+            qml.PauliX(0)
+        ]
+    elif n_qubits == 2:
+        H_list = [
+            H0, 
+            qml.PauliX(0) @ qml.Identity(1),
+            qml.Identity(0) @ qml.PauliY(1),
+        ]
+    elif n_qubits == 3: 
+    #    omega = jnp.array([1, 1.1, 1.2])
+        J = jnp.array([0.2, 0.13])
+    #    H0 = sum(omega[i]*qml.PauliZ(i) for i in range(n_qubits))
+    #    H1 = sum(J[i]*qml.PauliX(i)@qml.PauliX(i+1) for i in range(n_qubits-1))
+        #H_list  = [
+        #    qml.PauliZ(0) @ qml.PauliZ(1) + qml.PauliZ(1) @ qml.PauliZ(2),
+        #    qml.PauliY(0) @ qml.Identity(1) @ qml.Identity(2),
+        #    qml.PauliX(0) @ qml.Identity(1) @ qml.Identity(2),
+        #    sum(J[i]*qml.PauliX(i)@qml.PauliX(i+1) for i in range(n_qubits-1)),
+        #]
+        H_list = [
+            H0,
+            qml.PauliX(0) @ qml.Identity(1) @ qml.Identity(2),
+            qml.Identity(0) @ qml.PauliY(1) @ qml.Identity(2),
+            qml.Identity(0) @ qml.Identity(1) @ qml.PauliX(2),
+        ]
+    elif n_qubits == 4: 
+    #    omega = jnp.array([1, 1.12, 0.9, 1.3])
+    #    J = jnp.array([0.2, 0.15, 0.27])
+    #    H0 = sum(omega[i]*qml.PauliZ(i) for i in range(n_qubits))
+    #    H1 = sum(J[i]*qml.PauliX(i)@qml.PauliX(i+1) for i in range(n_qubits-1))
+        H_list = [
+            H0,
+            qml.PauliX(0) @ qml.Identity(1) @ qml.Identity(2) @ qml.Identity(3),
+            qml.Identity(0) @ qml.PauliY(1) @ qml.Identity(2) @ qml.Identity(3),
+            qml.Identity(0) @ qml.Identity(1) @ qml.PauliX(2) @ qml.Identity(3),
+            qml.Identity(0) @ qml.Identity(1) @ qml.PauliY(2) @ qml.Identity(3) ,
+            qml.Identity(0) @ qml.Identity(1) @ qml.Identity(2) @ qml.PauliX(3) ,
+        ]
+    else:
+        raise AssertionError("Not implemented yet")
+        
+    return H_list
