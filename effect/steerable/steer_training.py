@@ -15,10 +15,16 @@ import jax.random as jr
 import optax
 import equinox as eqx
 import pennylane as qml
-from functools import partial
-import matplotlib.pyplot as plt
-from helper import *
-from models import *
+
+import importlib.util
+
+spec_helper = importlib.util.spec_from_file_location("helper", "effect/steerable/helper.py")
+helper = importlib.util.module_from_spec(spec_helper)
+spec_helper.loader.exec_module(helper)
+
+spec_models = importlib.util.spec_from_file_location("models ", "effect/steerable/models.py")
+models = importlib.util.module_from_spec(spec_models)
+spec_models.loader.exec_module(models )
 
 #jax.config.update("jax_enable_x64", True)
 
@@ -31,7 +37,7 @@ def build_splitting_circuit(dev, H_list, n_qubits):
     dev: backend
     """
     @qml.qnode(dev)
-    def splitting_circuit(model, initial_state, H_list, T, n_steps, n=1):
+    def splitting_circuit(model, initial_state, T, n_steps, n=1):
         """ 
         model: control NN
         initial_state: Initial Quantum State
@@ -74,7 +80,7 @@ def build_circuit(backend, params, source, target, n_qubits):
     key = jr.PRNGKey(0)
 
     # Build Ansatz
-    H_list = build_hamiltonians(n_qubits)
+    H_list = helper.build_hamiltonians(n_qubits)
 
     # Souce and target state preparation
     initial_state = source 
@@ -102,7 +108,7 @@ def build_circuit(backend, params, source, target, n_qubits):
     @eqx.filter_jit
     def loss_fn(model, inital_state, target_state, T=1.0, n_steps=40, C=1e-5):#3e-4):
         psi = circuit(model, inital_state, T, n_steps)
-        fidelity = quantum_fidelity(psi, target_state)
+        fidelity = helper.quantum_fidelity(psi, target_state)
         ## 
         ts = jnp.linspace(0, T, n_steps)
         integral = jax.scipy.integrate.trapezoid(jax.vmap(lambda t : jnp.linalg.norm(model(t))**2)(ts), ts)
@@ -123,7 +129,7 @@ def build_circuit(backend, params, source, target, n_qubits):
             print(f"Step {step:03d}: loss = {loss:.6f}")
     
     rho_f = circuit(model, initial_state, T, n_steps)
-    print(f"Final fidelity: {quantum_fidelity(rho_f, target_state)}")
+    print(f"Final fidelity: {helper.quantum_fidelity(rho_f, target_state)}")
 
     @qml.qnode(backend)
     def final_circuit(initial_state, n_qubits, T, n_steps=40, n=1):
