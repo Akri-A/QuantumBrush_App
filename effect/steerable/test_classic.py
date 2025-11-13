@@ -30,6 +30,10 @@ key = jr.PRNGKey(0)
 
 ## Chooce Your Hamiltonian Ansatz
 def build_hamiltonians(n_qubits, key = jr.PRNGKey(0)): 
+    H0 = sum(qml.PauliX(i) @ qml.PauliX(i+1) for i in range(n_qubits-1))   
+    H0 += sum(qml.PauliY(i) @ qml.PauliY(i+1) for i in range(n_qubits-1))  
+    H0 += sum(qml.PauliZ(i) @ qml.PauliZ(i+1) for i in range(n_qubits-1))
+
     if n_qubits == 1: 
         H_list  = [
             qml.PauliZ(0),
