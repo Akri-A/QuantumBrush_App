@@ -2,5 +2,9 @@
 install.sh
 .code-workspace
 test.ipynb
+**/__pycache__/
+__pycache__/
+config/python_path.txt
+log/*
 metadata/*
 project/*
