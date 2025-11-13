@@ -1,0 +1,28 @@
+Traceback (most recent call last):
+  File "/run/host/home/hlovisie/Desktop/QuantumBrush/QuantumBrush/effect/apply_effect.py", line 229, in <module>
+    success = apply_effect(data)
+              ^^^^^^^^^^^^^^^^^^
+  File "/run/host/home/hlovisie/Desktop/QuantumBrush/QuantumBrush/effect/apply_effect.py", line 138, in apply_effect
+    new_image = effect_module.run(req)
+                ^^^^^^^^^^^^^^^^^^^^^^
+  File "/run/host/home/hlovisie/Desktop/QuantumBrush/QuantumBrush/effect/../effect/chemical/chemical.py", line 138, in run
+    final_angles =  chemistry(initial_angles, str(distance), circuit, params_to_apply)
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/run/host/home/hlovisie/Desktop/QuantumBrush/QuantumBrush/effect/../effect/chemical/chemical.py", line 49, in chemistry
+    '_t_0_' : params[distance][i][0],
+             ^^^^^^
+NameError: name 'params' is not defined
+Traceback (most recent call last):
+  File "/run/host/home/hlovisie/Desktop/QuantumBrush/QuantumBrush/effect/apply_effect.py", line 229, in <module>
+    success = apply_effect(data)
+              ^^^^^^^^^^^^^^^^^^
+  File "/run/host/home/hlovisie/Desktop/QuantumBrush/QuantumBrush/effect/apply_effect.py", line 138, in apply_effect
+    new_image = effect_module.run(req)
+                ^^^^^^^^^^^^^^^^^^^^^^
+  File "/run/host/home/hlovisie/Desktop/QuantumBrush/QuantumBrush/effect/../effect/chemical/chemical.py", line 138, in run
+    final_angles =  chemistry(initial_angles, str(distance), circuit, params_to_apply)
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/run/host/home/hlovisie/Desktop/QuantumBrush/QuantumBrush/effect/../effect/chemical/chemical.py", line 49, in chemistry
+    '_t_0_' : params[distance][i][0],
+             ^^^^^^
+NameError: name 'params' is not defined

@@ -1,0 +1,2 @@
+/home/ting/miniconda3/envs/quantumbrush/bin/python
+
