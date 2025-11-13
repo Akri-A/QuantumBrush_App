@@ -46,9 +46,9 @@ def chemistry(initial_angles : list,  distance : str, circuit : QuantumCircuit, 
         subcircuits =  list(range(0,num_qubits,num_qubits_circuit))
     for subcircuit in subcircuits:
         qc.compose(circuit.assign_parameters({
-            '_t_0_' : params[distance][i][0], 
-            '_t_1_' : params[distance][i][1], 
-            '_t_2_' : params[distance][i][2]}), qubits= subcircuit, inplace=True)
+            '_t_0_' : params_to_apply[distance][i][0], 
+            '_t_1_' : params_to_apply[distance][i][1], 
+            '_t_2_' : params_to_apply[distance][i][2]}), qubits= subcircuit, inplace=True)
         
     ops = [SparsePauliOp(Pauli('I'*(num_qubits-i) + p + 'I'*i)) for p in ['X','Y','Z']  for i in range(num_qubits)]
     obs = utils.run_estimator(qc,ops)

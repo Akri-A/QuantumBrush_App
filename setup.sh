@@ -323,7 +323,6 @@ setup_python_environment() {
         "qiskit-aer>=0.17.0" \
         "pytest>=7.0.0" \
         "black>=23.0.0" \
-	"numpy>=2.3"
         "matplotlib>=3.10.0" \
 
 
