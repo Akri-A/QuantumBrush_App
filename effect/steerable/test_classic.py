@@ -1,5 +1,6 @@
 # %%
 # %%
+# %%
 #
 # @Author: chih-kang-huang
 # @Date: 2025-11-10 21:30:57 
@@ -16,30 +17,43 @@ import equinox as eqx
 import pennylane as qml
 from functools import partial
 import matplotlib.pyplot as plt
-from utils.helper import *
+from utils import *
+from models import *
 
 #jax.config.update("jax_enable_x64", True)
 
 # %%
-n_qubits = 2
+n_qubits = 3
 
 
 key = jr.PRNGKey(0)
 
 ## Chooce Your Hamiltonian Ansatz
 def build_hamiltonians(n_qubits, key = jr.PRNGKey(0)): 
-    if n_qubits == 2:
-    #    omega = jnp.array([1, 1.3])
-    #    J = jnp.array([0.5])
-    #    H0 = sum([omega[i]*qml.PauliZ(i) for i in range(n_qubits)] + [J[0]*qml.PauliZ(0) @ qml.PauliZ(1)])
-    #    H1 = sum(qml.PauliX(i) for i in range(n_qubits-1))
-        H0 = qml.PauliZ(0) @ qml.PauliZ(1)
-        H1 = qml.PauliX(0) + qml.PauliX(1)
-    #if n_qubits == 3: 
+    if n_qubits == 1: 
+        H_list  = [
+            qml.PauliZ(0),
+            qml.PauliX(0)
+        ]
+    elif n_qubits == 2:
+        omega = jnp.array([1, 1.3])
+        J = jnp.array([0.5])
+        H_list = [
+            qml.PauliZ(0) @ qml.PauliZ(1),
+            qml.PauliY(0) @ qml.Identity(1),
+            qml.PauliX(0) @ qml.Identity(1),
+        ]
+    elif n_qubits == 3: 
     #    omega = jnp.array([1, 1.1, 1.2])
-    #    J = jnp.array([0.2, 0.13])
+        J = jnp.array([0.2, 0.13])
     #    H0 = sum(omega[i]*qml.PauliZ(i) for i in range(n_qubits))
     #    H1 = sum(J[i]*qml.PauliX(i)@qml.PauliX(i+1) for i in range(n_qubits-1))
+        H_list  = [
+            qml.PauliZ(0) @ qml.PauliZ(1) + qml.PauliZ(1) @ qml.PauliZ(2),
+            qml.PauliY(0) @ qml.Identity(1) @ qml.Identity(2),
+            qml.PauliX(0) @ qml.Identity(1) @ qml.Identity(2),
+            sum(J[i]*qml.PauliX(i)@qml.PauliX(i+1) for i in range(n_qubits-1)),
+        ]
     #if n_qubits == 4: 
     #    omega = jnp.array([1, 1.12, 0.9, 1.3])
     #    J = jnp.array([0.2, 0.15, 0.27])
@@ -59,12 +73,12 @@ def build_hamiltonians(n_qubits, key = jr.PRNGKey(0)):
         H0 = sum(omega[i]*qml.PauliZ(i) for i in range(n_qubits))
         H1 = sum(J[i]*qml.PauliX(i)@qml.PauliX(i+1) for i in range(n_qubits-1))
         
-    return H0, H1
+    return H_list
 
 key, Hkey = jr.split(key)
-H0, H1 = build_hamiltonians(n_qubits, Hkey)
+H_list = build_hamiltonians(n_qubits, Hkey)
 
-# %%
+
 
 # %%
 
@@ -80,85 +94,23 @@ target_state /= jnp.linalg.norm(target_state)
 
 # %%
 n_epochs = 500
-n_steps = 50
-T = 2.0
-lr = 0.01
+n_steps = 40
+T = 1.0
+lr = 0.05
 
 ## 
 key, mlpkey = jax.random.split(key)
 
-class ControlNN(eqx.Module):
-    mlp : eqx.Module
 
-    def __init__(
-        self, in_size='scalar', out_size='scalar', depth=2, width_size=64, activation=jax.nn.tanh, key=mlpkey
-    ):
-        self.mlp = eqx.nn.MLP(
-            in_size=in_size, out_size=out_size, depth=depth, width_size=width_size, activation=activation, key=key
-        )
-
-    @eqx.filter_jit 
-    def __call__(self, x): 
-        return (self.mlp(x))
-
-class FourierControl(eqx.Module):
-    """Fourier-based control ansatz: u(t) = a0 + Σ [a_m cos + b_m sin]."""
-    a0: jnp.ndarray
-    a: jnp.ndarray
-    b: jnp.ndarray
-    T: float
-    A_max: float
-
-    def __init__(self, key, M=6, T=1.0, A_max=1.0, scale=1e-2):
-        k1, k2, k3 = jax.random.split(key, 3)
-        self.a0 = jax.random.normal(k1, ()) * scale
-        self.a  = jax.random.normal(k2, (M,)) * scale / jnp.arange(1, M+1)
-        self.b  = jax.random.normal(k3, (M,)) * scale / jnp.arange(1, M+1)
-        self.T = T
-        self.A_max = A_max
-
-    def __call__(self, t):
-        """Evaluate control amplitude at time t ∈ [0, T]."""
-        t = jnp.atleast_1d(t)
-        freqs = jnp.arange(1, self.a.size + 1)
-        cos_terms = jnp.sum(self.a * jnp.cos(2*jnp.pi*freqs[None,:]*t[:,None]/self.T), axis=-1)
-        sin_terms = jnp.sum(self.b * jnp.sin(2*jnp.pi*freqs[None,:]*t[:,None]/self.T), axis=-1)
-        u = self.a0 + cos_terms + sin_terms
-        ## optional amplitude bound
-        #u = self.A_max * jnp.tanh(u / self.A_max)
-        return u if u.size > 1 else u[0]
-
-
-class PiecewiseConstantControl(eqx.Module):
-    amplitudes: jnp.ndarray  # shape (n_segments,)
-    t_final: float
-    n_segments: int
-
-    def __call__(self, t: float):
-        """Return the control amplitude u(t) for given time t."""
-        idx = jnp.clip(
-            (t / self.t_final * self.n_segments).astype(int),
-            0,
-            self.n_segments - 1,
-        )
-        return self.amplitudes[idx]
-
-    def values(self, times: jnp.ndarray):
-        """Convenience method: return u(t) for an array of times."""
-        return jax.vmap(self.__call__)(times)
-
-#model = ControlNN(
-#   in_size='scalar', out_size='scalar', depth=3, width_size=128, activation=jax.nn.tanh, key=mlpkey
-#)
-#model = FourierControl(
-#    key = mlpkey, M=10, T=T
-#)
-
-model = PiecewiseConstantControl(
-    amplitudes=jnp.zeros(n_steps), 
-    t_final= T, 
-    n_segments=n_steps
+model = eqx.nn.MLP(
+   in_size='scalar', out_size=len(H_list)-1, depth=2, width_size=16, activation=jax.nn.tanh, key=mlpkey
 )
+
+#model = PiecewiseConstantControl(
+#    amplitudes=jnp.zeros((n_steps, len(H_list))), 
+#    t_final= T, 
+#    n_segments=n_steps
+#)
 
 # %%
 
@@ -168,9 +120,14 @@ opt_state = optimizer.init(eqx.filter(model, eqx.is_array))
 
 
 # %%
+# %%
 static = eqx.partition(model, eqx.is_array)[-1]
-def hamiltonian(model, t, H0=H0, H1=H1):
-    return H0.matrix() + model(t) * H1.matrix()
+def hamiltonian(model, t, H_list=H_list):
+    H = H_list[0].matrix()
+    u = model(t)
+    for i, h in enumerate(H_list[1:]): 
+        H += u[i] * h.matrix()
+    return H
 
 # Schrodinger
 def schrodinger_rhs(t, psi, params):
@@ -179,9 +136,6 @@ def schrodinger_rhs(t, psi, params):
     return -1j * (H @ psi)
 
 
-# %%
-
-# %%
 
 # Numerical Integrator
 def propagate(psi0, t0, t1, params, steps=200):
@@ -194,15 +148,16 @@ def loss_fn(model, inital_state, target_state, T=1.0, n_steps=40, C= 0):
     params, static = eqx.partition(model, eqx.is_array)
     _, psi = propagate(inital_state, 0, T, params)
     fidelity = quantum_fidelity(psi[-1], target_state)
+    #diff = jnp.sum( jnp.abs(psi[-1]-target_state)**2)
+    #return diff
     ## 
     ts = jnp.linspace(0, T, n_steps)
-    energy = jax.scipy.integrate.trapezoid(jax.vmap((model))(ts)**2, ts)
-    smooth = jax.scipy.integrate.trapezoid(jax.vmap(jax.grad(model))(ts)**2, ts)
-    #return 1 - fidelity# + C*(energy + smooth)
-    return -jnp.log(fidelity+1e-12)# +1e-5*(smooth+energy)
+    energy = jax.scipy.integrate.trapezoid(jax.vmap(lambda t : model(t)[0])(ts)**2, ts)
+    energy2 = jax.scipy.integrate.trapezoid(jax.vmap(lambda t : model(t)[1])(ts)**2, ts)
+    #smooth = jax.scipy.integrate.trapezoid(jax.vmap(jax.grad(model))(ts)**2, ts)
+    return 1 - fidelity + 1e-5*(energy + energy2)
+    #return -jnp.log(fidelity+1e-12) #+1e-5*(smooth+energy)
 
-
-loss_fn(model, initial_state, target_state)
 
 # %%
 
@@ -228,19 +183,26 @@ print("Final fidelity:", quantum_fidelity(rho_f[-1], target_state))
 # %%
 
 
+
+# %%
+
 # %%
 
 
 # %%
-def simulate_trajectory(model, initial_state, n_steps=40, T=1.0):
+def simulate_trajectory(model, initial_state, H_list=H_list, n_steps=40, T=1.0):
     dt = T / n_steps
     dev = qml.device("default.qubit", wires=n_qubits)
 
     @qml.qnode(dev)
     def step_evolution(psi_in, u_k):
         qml.StatePrep(psi_in, wires=range(n_qubits))
+        H0 = H_list[0]
         qml.ApproxTimeEvolution(H0, dt/2, 1)
-        qml.ApproxTimeEvolution(u_k * H1, dt, 1)
+        for u, H in zip(list(u_k), H_list[1:]): 
+            qml.ApproxTimeEvolution(u*H, dt/2, 1)
+        for u, H in (zip(reversed(list(u_k)), reversed(H_list[1:]))): 
+            qml.ApproxTimeEvolution(u*H, dt/2, 1)
         qml.ApproxTimeEvolution(H0, dt/2, 1)
         return qml.state()
 
@@ -286,13 +248,17 @@ plt.title("Learned Control Pulse")
 plt.tight_layout()
 plt.show()
 
-
-
 # %%
 # %%
 visualize_bloch_trajectories(states, target_state, n_qubits)
 
 
+
+
+
+
+
+# %%
 
 
 

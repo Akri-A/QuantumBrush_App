@@ -1,4 +1,5 @@
 # %%
+# %%
 # # lie_test_2qubit.py
 # import numpy as np
 # import itertools
@@ -152,90 +153,97 @@
 #I2 = np.eye(2, dtype=complex)
 #PAULIS = {'I': I2, 'X': X, 'Y': Y, 'Z': Z}
 #
-#def kron_n(ops):
-#    out = ops[0]
-#    for A in ops[1:]:
-#        out = np.kron(out, A)
-#    return out
-#
-#def all_pauli_strings(n):
-#    labels = [''.join(p) for p in itertools.product(['I','X','Y','Z'], repeat=n)]
-#    mats = [kron_n([PAULIS[ch] for ch in label]) for label in labels]
-#    return labels, mats
-#
-## ---------- Vectorization ----------
-#def as_real_vector(A):
-#    return np.concatenate([np.real(A).ravel(), np.imag(A).ravel()])
-#
-#def add_if_independent(basis, v, tol=1e-9):
-#    if len(basis) == 0:
-#        basis.append(v)
-#        return True
-#    M = np.stack(basis, axis=1)
-#    r1 = np.linalg.matrix_rank(M, tol=tol)
-#    M2 = np.column_stack([M, v])
-#    r2 = np.linalg.matrix_rank(M2, tol=tol)
-#    if r2 > r1:
-#        basis.append(v)
-#        return True
-#    return False
-#
-## ---------- Lie closure ----------
-#def lie_closure(H_list, max_iter=40, tol=1e-9, verbose=True):
-#    gens = [(-1j)*H for H in H_list]
-#    basis = []
-#    basis_real = []
-#    for G in gens:
-#        add_if_independent(basis_real, as_real_vector(G), tol)
-#        basis.append(G)
-#
-#    for it in range(max_iter):
-#        new_added = 0
-#        cur_basis = basis.copy()
-#        for i in range(len(cur_basis)):
-#            for j in range(i, len(cur_basis)):
-#                C = cur_basis[i] @ cur_basis[j] - cur_basis[j] @ cur_basis[i]
-#                if np.linalg.norm(C) < 1e-12:
-#                    continue
-#                if add_if_independent(basis_real, as_real_vector(C), tol):
-#                    basis.append(C)
-#                    new_added += 1
-#        rank_now = np.linalg.matrix_rank(np.stack(basis_real, axis=1), tol)
-#        if verbose:
-#            print(f"Iter {it+1:2d}: new_added={new_added:3d}, real_rank={rank_now:4d}")
-#        if new_added == 0:
-#            break
-#    return basis, rank_now
-#
-## ---------- Example system ----------
-#def example_Hs(n):
-#    """Return example (H0, H1) for n-qubit controllable bilinear system."""
-#    # frequencies, couplings chosen to avoid degeneracy
-#    omegas = np.linspace(1.0, 1.0 + 0.3*(n-1), n)
-#    J = 0.3
-#    # Drift H0: local Z fields + nearest-neighbor ZZ coupling
-#    H0 = sum(omegas[k]*kron_n([Z if i==k else I2 for i in range(n)]) for k in range(n))
-#    H0 += J * sum(kron_n([Z if i in (k,k+1) else I2 for i in range(n)]) for k in range(n-1))
-#    # Control H1: global X rotation + weak nearest-neighbor XY
-#    H1 = sum(kron_n([X if i==k else I2 for i in range(n)]) for k in range(n))
-#    H1 += 0.2 * sum(kron_n([X if i==k else Y if i==k+1 else I2 for i in range(n)]) for k in range(n-1))
-#    return H0, H1
-#
-## ---------- Main ----------
-#if __name__ == "__main__":
-#    n = 3  # choose 2, 3, or 4
-#    print(f"Testing controllability for n={n} qubits ...")
-#
-#    H0, H1 = example_Hs(n)
-#    basis, rank_real = lie_closure([H0, H1], verbose=True)
-#
-#    target_dim = (2**n)**2 - 1
-#    print(f"\nFinal real rank = {rank_real}, expected su(2^{n}) dim = {target_dim}")
-#    if rank_real == target_dim:
-#        print("✅ Full controllability achieved.")
-#    else:
-#        print("⚠️ Not full rank — missing generators. Possibly too symmetric or degenerate H0/H1.")
-#
+def kron_n(ops):
+    out = ops[0]
+    for A in ops[1:]:
+        out = np.kron(out, A)
+    return out
+
+def all_pauli_strings(n):
+    labels = [''.join(p) for p in itertools.product(['I','X','Y','Z'], repeat=n)]
+    mats = [kron_n([PAULIS[ch] for ch in label]) for label in labels]
+    return labels, mats
+
+# ---------- Vectorization ----------
+def as_real_vector(A):
+    return np.concatenate([np.real(A).ravel(), np.imag(A).ravel()])
+
+def add_if_independent(basis, v, tol=1e-9):
+    if len(basis) == 0:
+        basis.append(v)
+        return True
+    M = np.stack(basis, axis=1)
+    r1 = np.linalg.matrix_rank(M, tol=tol)
+    M2 = np.column_stack([M, v])
+    r2 = np.linalg.matrix_rank(M2, tol=tol)
+    if r2 > r1:
+        basis.append(v)
+        return True
+    return False
+
+# ---------- Lie closure ----------
+def lie_closure(H_list, max_iter=40, tol=1e-9, verbose=True):
+    gens = [(-1j)*H for H in H_list]
+    basis = []
+    basis_real = []
+    for G in gens:
+        add_if_independent(basis_real, as_real_vector(G), tol)
+        basis.append(G)
+
+    for it in range(max_iter):
+        new_added = 0
+        cur_basis = basis.copy()
+        for i in range(len(cur_basis)):
+            for j in range(i, len(cur_basis)):
+                C = cur_basis[i] @ cur_basis[j] - cur_basis[j] @ cur_basis[i]
+                if np.linalg.norm(C) < 1e-12:
+                    continue
+                if add_if_independent(basis_real, as_real_vector(C), tol):
+                    basis.append(C)
+                    new_added += 1
+        rank_now = np.linalg.matrix_rank(np.stack(basis_real, axis=1), tol)
+        if verbose:
+            print(f"Iter {it+1:2d}: new_added={new_added:3d}, real_rank={rank_now:4d}")
+        if new_added == 0:
+            break
+    return basis, rank_now
+
+# ---------- Example system ----------
+def example_Hs(n):
+    """Return example (H0, H1) for n-qubit controllable bilinear system."""
+    # frequencies, couplings chosen to avoid degeneracy
+    if n==2:
+        H0 = (qml.PauliZ(0) @ qml.PauliZ(1)).matrix()
+        H1 = (qml.PauliX(0) + qml.PauliX(1)).matrix()
+    else:
+        omegas = np.linspace(1.0, 1.0 + 0.3*(n-1), n)
+        J = 0.3
+        # Drift H0: local Z fields + nearest-neighbor ZZ coupling
+        H0 = sum(omegas[k]*kron_n([Z if i==k else I2 for i in range(n)]) for k in range(n))
+        H0 += J * sum(kron_n([Z if i in (k,k+1) else I2 for i in range(n)]) for k in range(n-1))
+        # Control H1: global X rotation + weak nearest-neighbor XY
+        H1 = sum(kron_n([X if i==k else I2 for i in range(n)]) for k in range(n))
+        H1 += 0.2 * sum(kron_n([X if i==k else Y if i==k+1 else I2 for i in range(n)]) for k in range(n-1))
+    return H0, H1
+
+# ---------- Main ----------
+if __name__ == "__main__":
+    n = 2  # choose 2, 3, or 4
+    print(f"Testing controllability for n={n} qubits ...")
+
+    H0, H1 = example_Hs(n)
+    basis, rank_real = lie_closure([H0, H1], verbose=True)
+
+    target_dim = (2**n)**2 - 1
+    print(f"\nFinal real rank = {rank_real}, expected su(2^{n}) dim = {target_dim}")
+    if rank_real == target_dim:
+        print("✅ Full controllability achieved.")
+    else:
+        print("⚠️ Not full rank — missing generators. Possibly too symmetric or degenerate H0/H1.")
+
+
+
+# %%
 
 # %%
 #
@@ -542,5 +550,8 @@ print(qml.draw(circuit)())
 # %%
 # %%
 visualize_bloch_trajectories(states, target_state, n_qubits)
+
+
+
 
 
