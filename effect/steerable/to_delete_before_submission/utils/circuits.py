@@ -1,3 +1,10 @@
+#
+# @Author: chih-kang-huang
+# @Date: 2025-11-10 21:30:57 
+# @Last Modified by:   chih-Kang-huang
+# @Last Modified time: 2025-11-10 21:30:57 
+#
+
 import pennylane as qml
 import jax.numpy as jnp
 

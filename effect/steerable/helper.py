@@ -1,17 +1,45 @@
 '''
 Author: Chih-Kang Huang && chih-kang.huang@hotmail.com
-Date: 2025-11-11 15:45:26
+Date: 2025-11-13 08:14:18
 LastEditors: Chih-Kang Huang && chih-kang.huang@hotmail.com
-LastEditTime: 2025-11-13 21:42:58
-FilePath: /steerable/to_delete_before_submission/utils/helper.py
+LastEditTime: 2025-11-13 22:48:27
+FilePath: /steerable/helper.py
 Description: 
 
 
 '''
-
-import jax.numpy as jnp 
+import jax
+import jax.numpy as jnp
+import jax.random as jr
+import optax
+import equinox as eqx
 import pennylane as qml
 import matplotlib.pyplot as plt
+
+"""Define Circuit with 2nd order trotterization"""
+def splitting_circuit(model, initial_state, H_list, n_qubits, T=1.0, n_steps=40, n= 1):
+    """ 
+    model: control NN
+    initial_state: Initial Quantum State
+    H_list: Hamiltanian list
+    T: final time
+    n_steps: time steps
+    n: trotterizaiton order
+    """
+    dt = T / n_steps
+    qml.StatePrep(initial_state, wires=range(n_qubits))
+    for k in range(n_steps):
+        t_k = k * dt
+        u_k = model(jnp.array(t_k))
+        # Strang-splitting time step
+        H0 = H_list[0]
+        qml.ApproxTimeEvolution(H0, dt/2, 1)
+        for u, H in zip(list(u_k), H_list[1:]): 
+            qml.ApproxTimeEvolution(u*H, dt/2, 1)
+        for u, H in (zip(reversed(list(u_k)), reversed(H_list[1:]))): 
+            qml.ApproxTimeEvolution(u*H, dt/2, 1)
+        qml.ApproxTimeEvolution(H0, dt/2, 1)
+    return qml.state()
 
 def density_matrix(psi):
     """Convert a state vector to a density matrix."""
@@ -21,6 +49,7 @@ def quantum_fidelity(psi, rho):
     psi = psi/jnp.linalg.norm(psi)
     rho = rho /jnp.linalg.norm(rho)
     return jnp.abs(jnp.vdot(psi, rho))**2
+
 
 ### Visualization
 def von_neumann_entropy(rho):
@@ -106,3 +135,53 @@ def visualize_bloch_trajectories(states, target_state, n_qubits):
     plt.tight_layout()
     plt.show()
 
+def build_hamiltonians(n_qubits): 
+    H0 = sum(qml.PauliX(i) @ qml.PauliX(i+1) for i in range(n_qubits-1))   
+    H0 += sum(qml.PauliY(i) @ qml.PauliY(i+1) for i in range(n_qubits-1))  
+    H0 += sum(qml.PauliZ(i) @ qml.PauliZ(i+1) for i in range(n_qubits-1))
+
+    if n_qubits == 1: 
+        H_list  = [
+            qml.PauliZ(0),
+            qml.PauliX(0)
+        ]
+    elif n_qubits == 2:
+        H_list = [
+            H0, 
+            qml.PauliX(0) @ qml.Identity(1),
+            qml.Identity(0) @ qml.PauliY(1),
+        ]
+    elif n_qubits == 3: 
+    #    omega = jnp.array([1, 1.1, 1.2])
+        J = jnp.array([0.2, 0.13])
+    #    H0 = sum(omega[i]*qml.PauliZ(i) for i in range(n_qubits))
+    #    H1 = sum(J[i]*qml.PauliX(i)@qml.PauliX(i+1) for i in range(n_qubits-1))
+        #H_list  = [
+        #    qml.PauliZ(0) @ qml.PauliZ(1) + qml.PauliZ(1) @ qml.PauliZ(2),
+        #    qml.PauliY(0) @ qml.Identity(1) @ qml.Identity(2),
+        #    qml.PauliX(0) @ qml.Identity(1) @ qml.Identity(2),
+        #    sum(J[i]*qml.PauliX(i)@qml.PauliX(i+1) for i in range(n_qubits-1)),
+        #]
+        H_list = [
+            H0,
+            qml.PauliX(0) @ qml.Identity(1) @ qml.Identity(2),
+            qml.Identity(0) @ qml.PauliY(1) @ qml.Identity(2),
+            qml.Identity(0) @ qml.Identity(1) @ qml.PauliX(2),
+        ]
+    elif n_qubits == 4: 
+    #    omega = jnp.array([1, 1.12, 0.9, 1.3])
+    #    J = jnp.array([0.2, 0.15, 0.27])
+    #    H0 = sum(omega[i]*qml.PauliZ(i) for i in range(n_qubits))
+    #    H1 = sum(J[i]*qml.PauliX(i)@qml.PauliX(i+1) for i in range(n_qubits-1))
+        H_list = [
+            H0,
+            qml.PauliX(0) @ qml.Identity(1) @ qml.Identity(2) @ qml.Identity(3),
+            qml.Identity(0) @ qml.PauliY(1) @ qml.Identity(2) @ qml.Identity(3),
+            qml.Identity(0) @ qml.Identity(1) @ qml.PauliX(2) @ qml.Identity(3),
+            qml.Identity(0) @ qml.Identity(1) @ qml.PauliY(2) @ qml.Identity(3) ,
+            qml.Identity(0) @ qml.Identity(1) @ qml.Identity(2) @ qml.PauliX(3) ,
+        ]
+    else:
+        raise AssertionError("Not implemented yet")
+        
+    return H_list
