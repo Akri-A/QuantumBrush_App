@@ -122,7 +122,7 @@ def build_circuit(backend, params, source, target, n_qubits):
         return model, opt_state, loss
 
     # Training
-    print(f"=== Start traing ===")
+    print(f"=== Start training ===")
     for step in range(n_epochs):
         model, opt_state, loss = make_step(model, opt_state, initial_state, target_state, T, n_steps)
         if step % (n_epochs // 10) == 0:
@@ -132,7 +132,7 @@ def build_circuit(backend, params, source, target, n_qubits):
     print(f"Final fidelity: {helper.quantum_fidelity(rho_f, target_state)}")
 
     @qml.qnode(backend)
-    def final_circuit(initial_state, n_qubits, T, n_steps=40, n=1):
+    def final_circuit(initial_state, n_qubits, t, n_steps=40, n=1):
         """ 
         model: control NN
         initial_state: Initial Quantum State
@@ -141,7 +141,7 @@ def build_circuit(backend, params, source, target, n_qubits):
         n_steps: time steps
         n: trotterizaiton order
         """
-        dt = T / n_steps
+        dt = t / n_steps
         H0 = H_list[0]
         qml.StatePrep(initial_state, wires=range(n_qubits))
         for k in range(n_steps):

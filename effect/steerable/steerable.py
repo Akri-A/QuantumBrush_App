@@ -69,12 +69,11 @@ def state_to_pixels(template, state):
 Measurement
 """
 def create_circuit_and_measure(params, source, target, initial, n_qubits):
-    T = params["user_input"]["max T"]
+    t = params["user_input"]["t"]
     n_steps = params["user_input"]["timesteps"]
     dev = qml.device("default.qubit", wires=n_qubits)
     circuit = steer.build_circuit(dev, params["user_input"], source, target, n_qubits)
-    # output = circuit(initial, n_qubits, T, n_steps, n=1)
-    output = circuit(initial, n_qubits, T, n_steps=n_steps, n=1)
+    output = circuit(initial, n_qubits, t, n_steps=n_steps, n=1)
     return output
 
 """
@@ -102,30 +101,30 @@ def run(params):
     # Extract the copy and past points
     clicks = params["stroke_input"]["clicks"]
     print(clicks)
-    assert len(clicks) <= 4, "The number of clicks must 4, i.e. source, target, paste"
+    assert len(clicks) <= 3, "The number of clicks must 3, i.e. source, target, paste"
     print(f"There are {len(clicks)} clicks.")
-
-    offset_t = clicks[1]-clicks[0]
-    if len(clicks)>=3:
-        offset_o = clicks[2]-clicks[0]
-        if len(clicks)==4:
-            offset = clicks[3]-clicks[0]
-
+    
     # Extract the lasso path
     path = params["stroke_input"]["path"]
 
-    # Remove any leftover points
-    # while np.all(path[-1] != clicks[-1]):
-    #     path = path[:-1]
-    # path = path[:-1] #Remove the last click
-    path = path[:-len(clicks)+1] # need better strategy
+    start_coordinates = [
+        np.where((path == click).all(axis=1))[0][0]
+        for click in clicks
+    ]
+
+    paths = []
+    for i in range(len(clicks)-1):
+        paths.append(path[start_coordinates[i]:start_coordinates[i+1]])
+        print(f"path_{i} starts from {start_coordinates[i]} and has length {len(paths[i])}")
+    paths.append(path[start_coordinates[len(clicks)-1]:])
+    print(f"path_{len(clicks)-1} starts from {start_coordinates[len(clicks)-1]} and has length {len(paths[len(clicks)-1])}")
 
     nb_controls = params["user_input"]["Controls"]
 
     # Create the regions (source and target)
-    region_s = utils.points_within_lasso(path, border = (height, width))
+    region_s = utils.points_within_lasso(paths[0], border = (height, width))
     print("region_s============",len(region_s))
-    region_t = utils.points_within_lasso(path + offset_t, border = (height, width))
+    region_t = utils.points_within_lasso(paths[1], border = (height, width))
 
     # Encode colors to probability states
     print("=== Computing angles from source ===")
@@ -138,11 +137,29 @@ def run(params):
     output_measures = create_circuit_and_measure(params, state_s, state_t, state_s, nb_controls)
 
     # Apply effects
-    region_paste = utils.points_within_lasso(path + offset_o, border = (height, width))
+    region_paste = region_s
+    if not params["user_input"].get("Souce=Paste", True):
+        assert len(clicks)>=3, "At least 3 clicks are required for paste different from source"
+        region_paste = utils.points_within_lasso(paths[2], border = (height, width))
+        
     pixels = image[region_paste[:, 0], region_paste[:, 1],:]
     pixels = pixels.astype(np.float32) / 255.0
     new_pixels = state_to_pixels(pixels, output_measures)
-    # print("NEW_s============",new_pixels)
     image[region_paste[:, 0], region_paste[:, 1],:] = (new_pixels * 255).astype(np.uint8)
 
+    # Optional: show source and target regions
+    if params["user_input"].get("show source & target", False):
+        # highlight source
+        outline = utils.points_within_radius(paths[0], radius=30, border = None, return_distance = False)
+        outline_color = image[outline[:, 0], outline[:, 1]].astype(np.float32)/255
+        outline_color[...,:3] = params["user_input"]["show color"] / 255 # Set RGB channels
+        outline_color[...,3] = 1 # alpha in RGBA 
+        image[outline[:, 0], outline[:, 1]] = utils.apply_patch_to_image(image[outline[:, 0], outline[:, 1]], outline_color)
+        # highlight target
+        outline = utils.points_within_radius(paths[1], radius=30, border = None, return_distance = False)
+        outline_color = image[outline[:, 0], outline[:, 1]].astype(np.float32)/255
+        outline_color[...,:3] = params["user_input"]["show color"] / 255 # Set RGB channels
+        outline_color[...,3] = 1 # alpha in RGBA 
+        image[outline[:, 0], outline[:, 1]] = utils.apply_patch_to_image(image[outline[:, 0], outline[:, 1]], outline_color)
+ 
     return image

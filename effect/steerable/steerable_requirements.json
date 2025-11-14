@@ -1,9 +1,9 @@
 {
     "name": "Steerable",
     "id": "steerable",
-    "author": "LST",
+    "author": "Luminists Team",
     "version": "1.0.0",
-    "description": "TODO",
+    "description": "Draw two to three regions: source, target, and optional paste region. The quantum circuit will steer the source region to the target region, and modifies the pixels of the paste region or source region if paste region is not specified.",
     "dependencies": {
         "numpy": ">=2.1.0",
         "qiskit": "",
@@ -15,23 +15,31 @@
             "type": "int",
             "min": 2,
             "max": 4,
-            "default": 3
+            "default": 2
         },
         "timesteps": {
             "type": "int",
-            "min": 2,
+            "min": 10,
+            "max": 100,
             "default": 40
-        },
-        "max T": {
-            "type": "int",
-            "min": 1,
-            "default": 1
         },
         "t": {
             "type": "float",
             "min": 0.0,
-            "max": 1.0,
-            "default": 0.5
+            "max": 1.5,
+            "default": 0.8
+        },
+        "Souce=Paste": {
+            "type": "bool",
+            "default": true
+        },
+        "show source & target": {
+            "type": "bool",
+            "default": false
+        },
+        "show color": {
+            "type": "color",
+            "default": "#FF0000"
         }
     },
     "stroke_input": {
