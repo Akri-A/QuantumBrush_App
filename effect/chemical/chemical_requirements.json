@@ -3,8 +3,8 @@
     "id": "chemical",
     "author": "Luminists JSL and HE",
     "version": "1.0.0",
-    "long_description": "TODO",
-    "description": "TODO",
+    "long_description": "The brush uses the Variational Quantum Eigensolver (VQE) to simulate simple molecules and drive changes on the canvas based on the resulting quantum states. \n This is done by applying a preprocessed family of VQE circuits to different pixels of the canvas. The resulting quantum states are then mapped to color values, creating a dynamic and interactive painting experience that reflects the underlying quantum chemistry simulations. Therefore, by adjusting parameters such as bond distance and basis set, users can explore how different molecular configurations influence the visual effects produced by the brush.\n Available parameters include:\n - Radius: controls the size of the brush\n - Bond Distance: sets the interatomic distance for the simulated molecule\n - Basis: selects the basis set for the quantum simulation\n - Molecule: chooses the molecule to simulate (currently only H2 is supported).\n",
+    "description": "Chemical uses the VQE to drive changes on the underlying canvas. \n\n The effect is controlled by several parameters:\n 🔹 Radius → determines the size of the brush\n 🔹 Bond Distance → determines the interatomic distance to simulate 🔹 Basis → basis for simulation (as of now, only sto3g is implemented) 🔹 Molecule → the simulated molecule (as of now, only H2 is available) \n \n\nUsage:\n 🔸 Click and drag on the canvas to apply the effect.\n",
     "dependencies": {
         "numpy": ">=2.1.0",
         "colorsys": "",
@@ -32,12 +32,6 @@
         "Molecule": {
             "type": "str",
             "default": "H2" 
-        },
-        "Number of Circuits": {
-            "type": "int",
-            "min": 5,
-            "max": 500,
-            "default": 10 
         }
     },
     "stroke_input": {
