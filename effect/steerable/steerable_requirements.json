@@ -1,7 +1,7 @@
 {
     "name": "Steerable",
     "id": "steerable",
-    "author": "Luminists Team",
+    "author": "Luminists (Chih-Kang & Jui-Ting)",
     "version": "1.0.0",
     "description": "This brush demonstrates an application of quantum control theory.\nThe user selects three regions—source, target, and paste—by drawing two or three circles.\nThe third region may also be specified as a single point (i.e., two circles and one point). In this case, the steered source image will be pasted into the region whose barycenter corresponds to the selected point.\nBy default, \"Source = Paste\" is false; please select it only if you do not define a separate third region.\n\nA model is then trained to compute a quantum circuit that transforms the source region into the target region.\nAfter training, the learned transformation is applied to the paste region (which may be identical to the source).\n\nThe user can also choose a parameter t, which controls how far along the transformation the system evolves:\nt = 0 → fully similar to the source\nt = 1 → fully similar to the target\nt > 1 → evolves beyond the target state, which may produce interesting effects\n\nAdditional parameters:\ntimestep: the number of discrete time steps used to approximate the circuit’s evolution\ncontrols: the number of features used to represent a patch, corresponding to the number of qubits\n\nThe user also has optional visualization controls: enable \"show source & target\" and optionally \"show color\" to display the reference regions.\n",
     "dependencies": {
