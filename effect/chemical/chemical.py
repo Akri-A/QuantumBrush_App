@@ -13,9 +13,32 @@ spec = importlib.util.spec_from_file_location("utils", "effect/utils.py")
 utils = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(utils)
 
+def resize_list_repeat(values, new_length):
+    """
+    Resize a list by repeating or skipping elements uniformly.
+    - Expands the list by repeating elements.
+    - Reduces the list by evenly skipping elements.
+    """
+    
+    if new_length <= 0:
+        return []
+
+    old_length = len(values)
+    if old_length == 0:
+        return []
+    if old_length == 1:
+        return [values[0]] * new_length
+    if old_length == new_length:
+        return values.copy()
+
+    # Compute the new indices uniformly
+    idx = np.linspace(0, old_length - 1, new_length)
+    idx = np.round(idx).astype(int)
+
+    return [values[i] for i in idx]
 
 
-def chemistry(initial_angles : list,  distance : str, circuit : QuantumCircuit, params_to_apply : list):
+def chemistry(initial_angles : list, circuit : QuantumCircuit, params_to_apply : list):
     """
     Run Chemical model simulation on quantum hardware simulator.
 
@@ -29,26 +52,32 @@ def chemistry(initial_angles : list,  distance : str, circuit : QuantumCircuit, 
     Returns:
         Final angles after application of circuits.
     """
-    num_qubits = len(initial_angles)
+    num_angles = len(initial_angles)
     print("initial angles",initial_angles)
-
+    num_qubits_subcircuit = circuit.num_qubits 
+    # expected number of subcircuits = number of qubits / number of qubits per circuit (there will be some leftover qubits if not divisible)
+    num_subcircuits = num_angles // num_qubits_subcircuit 
+    leftover_qubits =  num_angles % num_qubits_subcircuit # number of leftover qubits
+    # adjust the number of parameters of subcircuits to match the expected number of subcircuits
+    adjusted_params_to_apply = resize_list_repeat(params_to_apply, num_subcircuits)
+    
+    num_qubits = num_angles - leftover_qubits  # total number of qubits to use (excluding leftover)
+    qc = QuantumCircuit(num_qubits+1) 
+    qc.x(num_qubits)
     # Prepare each qubit in the state defined by (theta, phi)
-    for i, (phi, theta) in enumerate(initial_angles):
-        qc = QuantumCircuit(num_qubits)
+    for i, (phi, theta) in enumerate(initial_angles[leftover_qubits:]):
         qc.ry(theta, i)
         qc.rz(phi, i)
 
-    # Apply the circuit with the current parameters as subcircuits
-    num_qubits_circuit = circuit.num_qubits
-    if num_qubits % num_qubits_circuit:
-        subcircuits = list(range(0,num_qubits,num_qubits_circuit))[:-1]
-    else:
-        subcircuits =  list(range(0,num_qubits,num_qubits_circuit))
-    for subcircuit in subcircuits:
+
+    for index_subcircuit in range(num_subcircuits):
+        add_index = index_subcircuit * num_qubits_subcircuit # starting index for the subcircuit
+        index_params = index_subcircuit % len(params_to_apply) # corresponding parameters index
         qc.compose(circuit.assign_parameters({
-            '_t_0_' : params_to_apply[subcircuit][0], 
-            '_t_1_' : params_to_apply[subcircuit][1], 
-            '_t_2_' : params_to_apply[subcircuit][2]}), qubits= subcircuit, inplace=True)
+                '_t_0_' : adjusted_params_to_apply[index_params][0], 
+                '_t_1_' : adjusted_params_to_apply[index_params][1], 
+                '_t_2_' : adjusted_params_to_apply[index_params][2]}), qubits= range(add_index,add_index+num_qubits_subcircuit), inplace=True)
+
         
     ops = [SparsePauliOp(Pauli('I'*(num_qubits-i) + p + 'I'*i)) for p in ['X','Y','Z']  for i in range(num_qubits)]
     obs = utils.run_estimator(qc,ops)
@@ -65,7 +94,7 @@ def chemistry(initial_angles : list,  distance : str, circuit : QuantumCircuit, 
     final_angles = list(zip(phi_expectations, theta_expectations))
 
 
-    return final_angles
+    return initial_angles[:leftover_qubits]+final_angles
 
 
 
@@ -111,13 +140,13 @@ def run(params):
 
     # Split path to have the same number of pixels as circuits available
     params_to_apply = circuit_params[str(distance)]
+    print(f"Using distance: {distance} and the number of available circuits: {len(params_to_apply)}")
     # Number of qubits equals the number of parameters time the number of qubits per circuit
-    qubits = len(params_to_apply) * circuit.num_qubits 
-    split_size = max(1, path_length // qubits)
-    split_paths = [path[i * split_size : (i + 1) * split_size] for i in range(qubits - 1)]
-    split_paths.append(path[(qubits - 1) * split_size :])
-
-
+    num_circuit = params["user_input"]["Number of Circuits"] 
+    split_size = max(1, path_length // num_circuit)
+    split_paths = [path[i * split_size : (i + 1) * split_size] for i in range(num_circuit - 1)]
+    split_paths.append(path[(num_circuit - 1) * split_size :])
+    
     initial_angles = [] #(Theta,phi)
     pixels = []
     for lines in split_paths:
@@ -133,9 +162,8 @@ def run(params):
     
         initial_angles.append((phi,theta))
         pixels.append((region, selection_hls))
-
-
-    final_angles =  chemistry(initial_angles, str(distance), circuit, params_to_apply)
+    
+    final_angles =  chemistry(initial_angles, circuit, params_to_apply)
 
     for i,(region,selection_hls) in enumerate(pixels):
         new_phi, new_theta = final_angles[i]

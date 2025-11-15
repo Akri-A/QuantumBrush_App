@@ -32,6 +32,12 @@
         "Molecule": {
             "type": "str",
             "default": "H2" 
+        },
+        "Number of Circuits": {
+            "type": "int",
+            "min": 5,
+            "max": 500,
+            "default": 10 
         }
     },
     "stroke_input": {
