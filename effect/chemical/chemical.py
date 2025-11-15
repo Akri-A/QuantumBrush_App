@@ -1,12 +1,9 @@
 import numpy as np
-import colorsys
+from qiskit import qpy
 from qiskit import QuantumCircuit
-from qiskit.quantum_info import Pauli, SparsePauliOp, Statevector, entropy, partial_trace
+from qiskit.quantum_info import Pauli, SparsePauliOp
 import importlib.util
 from scipy.stats import circmean
-
-# Chemical exclusive imports
-from qiskit import qpy
 import json
 
 spec = importlib.util.spec_from_file_location("utils", "effect/utils.py")
@@ -131,6 +128,7 @@ def run(params):
     assert 2.5 >= distance >= 0.735, "Distance must be greater than between 0.735 and 2.5 Angstroms"
     distances = [float (d) for d in circuit_params.keys()]
     distance = min(distances, key=lambda x:abs(x-distance))
+    print(f"Selected distance for simulation: {distance} Angstroms")
     
     radius = params["user_input"]["Radius"]
     assert radius > 0, "Radius must be greater than 0"
@@ -142,7 +140,7 @@ def run(params):
     # Split path to have the same number of pixels as circuits available
     params_to_apply = circuit_params[str(distance)]
     print(f"Using distance: {distance} and the number of available circuits: {len(params_to_apply)}")
-    num_discretization = len(params_to_apply) # number of available circuits 
+    num_discretization = len(params_to_apply) * circuit.num_qubits # number of available circuits * qubits
     split_size = max(1, path_length // num_discretization)
     split_paths = [path[i * split_size : (i + 1) * split_size] for i in range(num_discretization - 1)]
     split_paths.append(path[(num_discretization - 1) * split_size :])
