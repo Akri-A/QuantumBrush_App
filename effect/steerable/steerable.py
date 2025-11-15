@@ -139,8 +139,15 @@ def run(params):
     # Apply effects
     region_paste = region_s
     if not params["user_input"].get("Souce=Paste", True):
-        assert len(clicks)>=3, "At least 3 clicks are required for paste different from source"
-        region_paste = utils.points_within_lasso(paths[2], border = (height, width))
+        assert len(clicks)==3, "At least 3 clicks are required for paste different from source"
+        if len(paths[2])>10:
+            region_paste = utils.points_within_lasso(paths[2], border = (height, width))
+        else :
+            barycenter = np.rint(paths[0].mean(axis=0)).astype(int)
+            offset = clicks[2]-barycenter
+            print(offset)
+            region_paste = utils.points_within_lasso(paths[0]+offset, border = (height, width))
+            print(region_paste)
         
     pixels = image[region_paste[:, 0], region_paste[:, 1],:]
     pixels = pixels.astype(np.float32) / 255.0
