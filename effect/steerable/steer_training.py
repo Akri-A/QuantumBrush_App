@@ -2,8 +2,8 @@
 Author: Chih-Kang Huang && chih-kang.huang@hotmail.com
 Date: 2025-11-11 15:45:26
 LastEditors: Chih-Kang Huang && chih-kang.huang@hotmail.com
-LastEditTime: 2025-11-13 22:55:33
-FilePath: /steerable/steer_training.py
+LastEditTime: 2025-11-15 22:25:47
+FilePath: /QuantumBrush/effect/steerable/steer_training.py
 Description: 
 
 
@@ -53,12 +53,12 @@ def build_splitting_circuit(dev, H_list, n_qubits):
             t_k = k * dt
             u_k = model(jnp.array(t_k))
             # Strang-splitting time step
-            qml.ApproxTimeEvolution(H0, dt/2, 1)
+            qml.ApproxTimeEvolution(H0, dt/2, n)
             for u, H in zip(list(u_k), H_list[1:]): 
-                qml.ApproxTimeEvolution(u*H, dt/2, 1)
+                qml.ApproxTimeEvolution(u*H, dt/2, n)
             for u, H in (zip(reversed(list(u_k)), reversed(H_list[1:]))): 
-                qml.ApproxTimeEvolution(u*H, dt/2, 1)
-            qml.ApproxTimeEvolution(H0, dt/2, 1)
+                qml.ApproxTimeEvolution(u*H, dt/2, n)
+            qml.ApproxTimeEvolution(H0, dt/2, n)
         return qml.state()
     return splitting_circuit
 
@@ -106,7 +106,7 @@ def build_circuit(backend, params, source, target, n_qubits):
     circuit = build_splitting_circuit(dev, H_list, n_qubits)
 
     @eqx.filter_jit
-    def loss_fn(model, inital_state, target_state, T=1.0, n_steps=40, C=1e-5):#3e-4):
+    def loss_fn(model, inital_state, target_state, T=1.0, n_steps=40, C=1e-5):
         psi = circuit(model, inital_state, T, n_steps)
         fidelity = helper.quantum_fidelity(psi, target_state)
         ## 
@@ -136,7 +136,7 @@ def build_circuit(backend, params, source, target, n_qubits):
         """ 
         model: control NN
         initial_state: Initial Quantum State
-        H0, H1: Hamiltanians
+        H_list: Hamiltonian List
         T: final time
         n_steps: time steps
         n: trotterizaiton order
@@ -148,12 +148,12 @@ def build_circuit(backend, params, source, target, n_qubits):
             t_k = k * dt
             u_k = model(jnp.array(t_k))
             # Strang-splitting time step
-            qml.ApproxTimeEvolution(H0, dt/2, 1)
+            qml.ApproxTimeEvolution(H0, dt/2, n)
             for u, H in zip(list(u_k), H_list[1:]): 
-                qml.ApproxTimeEvolution(u*H, dt/2, 1)
+                qml.ApproxTimeEvolution(u*H, dt/2, n)
             for u, H in (zip(reversed(list(u_k)), reversed(H_list[1:]))): 
-                qml.ApproxTimeEvolution(u*H, dt/2, 1)
-            qml.ApproxTimeEvolution(H0, dt/2, 1)
+                qml.ApproxTimeEvolution(u*H, dt/2, n)
+            qml.ApproxTimeEvolution(H0, dt/2, n)
         return qml.state()
     print("=== Circuit built. ===")
     return final_circuit
