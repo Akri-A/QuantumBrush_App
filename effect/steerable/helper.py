@@ -2,8 +2,8 @@
 Author: Chih-Kang Huang && chih-kang.huang@hotmail.com
 Date: 2025-11-13 08:14:18
 LastEditors: Chih-Kang Huang && chih-kang.huang@hotmail.com
-LastEditTime: 2025-11-16 11:46:42
-FilePath: /QuantumBrush/effect/steerable/helper.py
+LastEditTime: 2025-11-16 20:08:24
+FilePath: /effect/steerable/helper.py
 Description: 
 
 '''
@@ -45,6 +45,7 @@ def build_hamiltonians(n_qubits):
             qml.Identity(0) @ qml.PauliY(1),
         ]
     elif n_qubits == 3: 
+        J = jnp.array([0.2, 0.13])
         H_list = [
             H0,
             qml.PauliX(0) @ qml.Identity(1) @ qml.Identity(2),
@@ -56,9 +57,8 @@ def build_hamiltonians(n_qubits):
             H0,
             qml.PauliX(0) @ qml.Identity(1) @ qml.Identity(2) @ qml.Identity(3),
             qml.Identity(0) @ qml.PauliY(1) @ qml.Identity(2) @ qml.Identity(3),
-            qml.Identity(0) @ qml.Identity(1) @ qml.PauliX(2) @ qml.Identity(3),
-            qml.Identity(0) @ qml.Identity(1) @ qml.PauliY(2) @ qml.Identity(3) ,
-            #qml.Identity(0) @ qml.Identity(1) @ qml.Identity(2) @ qml.PauliX(3) ,
+            qml.Identity(0) @ qml.Identity(1) @ qml.PauliZ(2) @ qml.Identity(3),
+            qml.Identity(0) @ qml.Identity(1) @ qml.Identity(2) @ qml.PauliX(3),
         ]
     else:
         raise AssertionError("Not implemented yet")
@@ -126,7 +126,7 @@ def build_circuit(backend, params, source, target, n_qubits):
     target_state /= jnp.linalg.norm(target_state)
 
     n_epochs = params.get("n_epochs", 500)
-    n_steps = params.get("timesteps", 30)
+    n_steps = params.get("timesteps", 25)
     T = params.get("max T", 1.0)
     lr = params.get("lr", 0.05)
 
@@ -139,10 +139,10 @@ def build_circuit(backend, params, source, target, n_qubits):
     opt_state = optimizer.init(eqx.filter(model, eqx.is_array))
 
     # Build circuit for training
-    dev = qml.device("default.qubit", wires=n_qubits)
-    circuit = qml.qnode(dev)(partial(splitting_circuit, H_list=H_list, n_qubits=n_qubits))
+    dev = qml.device("default.qubit", interface='jax', wires=n_qubits)
+    circuit = eqx.filter_jit(qml.qnode(dev)(partial(splitting_circuit, H_list=H_list, n_qubits=n_qubits)))
     ### Loss function and NN training 
-    def loss_fn(model, inital_state, target_state, T=1.0, n_steps=40, C=1e-5):
+    def loss_fn(model, inital_state, target_state, T=1.0, n_steps=30, C=1e-5):
         psi = circuit(model, inital_state, T, n_steps)
         fidelity = quantum_fidelity(psi, target_state)
         ## 
@@ -171,7 +171,7 @@ def build_circuit(backend, params, source, target, n_qubits):
     print(f"Final fidelity: {quantum_fidelity(rho_f, target_state)}")
 
     print("=== Circuit built. ===")
-    final_circuit = qml.qnode(backend)(partial(splitting_circuit, model=model, H_list=H_list))
+    final_circuit = (qml.qnode(backend)(partial(splitting_circuit, model=model, H_list=H_list)))
     return final_circuit
 
 ### Visualization
@@ -209,7 +209,7 @@ def partial_trace(psi, keep, n_qubits):
 
 # ---------- Main visualization ----------
 
-def visualize_bloch_trajectories(states, target_state, n_qubits):
+def visualize_bloch_trajectories(states, target_state, n_qubits, ent=False, savepath=None):
     """
     states: list/array of shape (T, 2**n)
     target_state: vector of shape (2**n,)
@@ -226,17 +226,13 @@ def visualize_bloch_trajectories(states, target_state, n_qubits):
         trajs.append(traj_q)
         targets.append(bloch_vector(partial_trace(target_state, [q], n_qubits)))
 
-    # Entanglement entropy between qubit 0 and the rest
-    ent_entropy = jnp.array([
-        von_neumann_entropy(partial_trace(psi, [0], n_qubits)) for psi in states
-    ])
 
     # ---------- Visualization ----------
     fig = plt.figure(figsize=(5 * n_qubits, 5))
-
+    n_fig = n_qubits +1 if ent else n_qubits
     # Each qubit's Bloch trajectory
     for q in range(n_qubits):
-        ax = fig.add_subplot(1, n_qubits + 1, q + 1, projection='3d')
+        ax = fig.add_subplot(1, n_fig, q + 1, projection='3d')
         traj = trajs[q]
         target = targets[q]
         ax.plot(traj[:,0], traj[:,1], traj[:,2], lw=2)
@@ -246,17 +242,24 @@ def visualize_bloch_trajectories(states, target_state, n_qubits):
         ax.set_xlabel('X'); ax.set_ylabel('Y'); ax.set_zlabel('Z')
         ax.set_title(f'Qubit {q} Bloch trajectory')
         ax.legend()
-
     # Entanglement entropy
-    ax_e = fig.add_subplot(1, n_qubits + 1, n_qubits + 1)
-    ax_e.plot(jnp.linspace(0, 1.0, len(ent_entropy)), ent_entropy, color='purple', lw=2)
-    ax_e.set_xlabel('Time t')
-    ax_e.set_ylabel('Entanglement entropy S(t)')
-    ax_e.set_title('Entanglement entropy (qubit 0 vs rest)')
-    ax_e.grid(True)
+    if ent:
+        # Entanglement entropy between qubit 0 and the rest
+        ent_entropy = jnp.array([
+            von_neumann_entropy(partial_trace(psi, [0], n_qubits)) for psi in states
+        ])
+        ax_e = fig.add_subplot(1, n_fig, n_fig)
+        ax_e.plot(jnp.linspace(0, 1.0, len(ent_entropy)), ent_entropy, color='purple', lw=2)
+        ax_e.set_xlabel('Time t')
+        ax_e.set_ylabel('Entanglement entropy S(t)')
+        ax_e.set_title('Entanglement entropy (qubit 0 vs rest)')
+        ax_e.grid(True)
 
     plt.tight_layout()
-    plt.show()
+    if savepath: 
+        plt.savefig(savepath)
+    else:
+        plt.show()
 
 ## Neural Networkd Model selection 
 class FourierControl(eqx.Module):
