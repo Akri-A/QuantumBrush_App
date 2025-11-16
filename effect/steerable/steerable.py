@@ -20,49 +20,49 @@ def selection_to_state(image, region, nb_controls):
     print(f"initial pixels {pixels}")
     pixels = pixels.astype(np.float32) / 255.0
 
-    _, S, Vt = np.linalg.svd(pixels, full_matrices=False)
-    log_s = np.log(S)
+    U, S, Vt = np.linalg.svd(pixels, full_matrices=False)
+    S_safe = np.clip(S, 1e-30, None)  # Avoid log(0) or negative
+    log_s = np.log(S_safe)
     if nb_controls == 2:
-        return log_s / np.linalg.norm(log_s)
+        return U, S, Vt, log_s / np.linalg.norm(log_s)
 
     state = Vt.flatten() # 16 entries
     if nb_controls == 3:
         log_s_normalized = log_s / np.linalg.norm(log_s)
         state_normalized = state[:4] / np.linalg.norm(state[:4])
-        return jnp.concatenate([0.5*log_s_normalized , 0.5*state_normalized])
+        return U, S, Vt, jnp.concatenate([0.5*log_s_normalized , 0.5*state_normalized])
     elif nb_controls == 4:
-        return state / np.linalg.norm(state)
+        return U, S, Vt, state / np.linalg.norm(state)
     else :
         raise ValueError(f"Unsupported number of controls: {nb_controls}")
 
-def state_to_pixels(template, state):
+def state_to_pixels(U, S, Vt, state):
     """
     template : selection of pixels from an image
     state : output state from circuit
     """
     nb = len(state)
-    state = np.abs(state) # complexe->real (take magnitude)
-    U, S, Vt = np.linalg.svd(template, full_matrices=False)
     S_new = np.copy(np.diag(S))
     Vt_new = np.copy(Vt)
-    log_s = np.log(S)
+    S_safe = np.clip(S, 1e-30, None)  # Avoid log(0) or negative
+    log_s = np.log(S_safe)
     norm_log_s = np.linalg.norm(log_s)
     if nb==4:
-        S_new = np.diag(np.exp(norm_log_s*state))
+        exponent = np.clip(norm_log_s * state, -700, 700) # to avoid overflow
+        S_new = np.diag(np.exp(exponent))
     elif nb==8 :
-        S_new = np.diag(np.exp(norm_log_s*state[:4]))
+        exponent = np.clip(2*norm_log_s*state[:4], -700, 700) # to avoid overflow
+        S_new = np.diag(np.exp(exponent))
         vt = Vt.flatten() 
         vt_norm = np.linalg.norm(vt[:4])
-        vt_modified =  vt_norm * state[4:]
+        vt_modified =  2*vt_norm * state[4:]
         Vt_new = np.concatenate([vt_modified, vt[4:]]).reshape(Vt.shape)
-        # Vt_new = (vt_modified+vt[4:]).reshape(Vt.shape)
     elif nb==16:
         vt_norm = np.linalg.norm(Vt)
         Vt_new = (vt_norm * state).reshape(Vt.shape)
     else :
         raise ValueError(f"Unsupported number of param in state : {nb}")
-    print(f"========== Output ==============\n U={U}, S={S_new}, Vt={Vt_new}")
-
+    print(f"========== Output ==============\n U=\n{U},\n S=\n{S_new},\n Vt=\n{Vt_new}")
     return U @ S_new @ Vt_new
     
 """
@@ -129,22 +129,26 @@ def run(params):
 
     # Encode colors to probability states
     print("=== Computing angles from source ===")
-    state_s = selection_to_state(image, region_s, nb_controls)
-    print(state_s)
+    U_s, S_s, Vt_s, state_s = selection_to_state(image, region_s, nb_controls)
     print("=== Computing angles from target ===")
-    state_t = selection_to_state(image, region_t, nb_controls)
+    _, _, _, state_t = selection_to_state(image, region_t, nb_controls)
 
     # Comput brush effects
-    output_measures = create_circuit_and_measure(params, state_s, state_t, state_s, nb_controls)
+    output_measures = create_circuit_and_measure(params, state_s, state_t, state_s, nb_controls).real
+    print(f"input state: {state_s}\n output state: {output_measures}")
 
     # Apply effects
     region_output = region_s
+    U_o, S_o, Vt_o = U_s, S_s, Vt_s
     region_paste = region_s
     if not params["user_input"].get("Souce=Paste", True):
         assert len(clicks)==3, "At least 3 clicks are required for paste different from source"
         if len(paths[2])>10:
             region_output = utils.points_within_lasso(paths[2], border = (height, width))
             region_paste = region_output
+            pixels = image[region_output[:, 0], region_output[:, 1],:]
+            pixels = pixels.astype(np.float32) / 255.0
+            U_o, S_o, Vt_o = np.linalg.svd(pixels, full_matrices=False)
         else :
             barycenter = np.rint(paths[0].mean(axis=0)).astype(int)
             offset = clicks[2]-barycenter
@@ -152,9 +156,12 @@ def run(params):
             region_paste = utils.points_within_lasso(paths[0]+offset, border = (height, width))
             print(region_paste)
         
-    pixels = image[region_output[:, 0], region_output[:, 1],:]
-    pixels = pixels.astype(np.float32) / 255.0
-    new_pixels = state_to_pixels(pixels, output_measures)
+    new_pixels = state_to_pixels(U_o, S_o, Vt_o, output_measures)
+    # Clip RGB channels (first 3 columns) to 0–255
+    new_pixels[:, :3] = np.clip(new_pixels[:, :3], 0, 255)
+    # Clip alpha channel (fourth column) to 0–50
+    new_pixels[:, 3] = np.clip(new_pixels[:, 3], 50, 255)
+    print(f"new pixels: {new_pixels}")
     image[region_paste[:, 0], region_paste[:, 1],:] = (new_pixels * 255).astype(np.uint8)
 
     # Optional: show source and target regions
