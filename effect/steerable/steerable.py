@@ -100,9 +100,10 @@ def run(params):
 
     # Extract the copy and past points
     clicks = params["stroke_input"]["clicks"]
-    print(clicks)
-    assert len(clicks) <= 3, "The number of clicks must 3, i.e. source, target, paste"
     print(f"There are {len(clicks)} clicks.")
+    print(clicks)
+    assert len(clicks) <= 3, "The number of clicks must be 3, i.e. source, target, paste"
+    
     
     # Extract the lasso path
     path = params["stroke_input"]["path"]
@@ -137,11 +138,13 @@ def run(params):
     output_measures = create_circuit_and_measure(params, state_s, state_t, state_s, nb_controls)
 
     # Apply effects
+    region_output = region_s
     region_paste = region_s
     if not params["user_input"].get("Souce=Paste", True):
         assert len(clicks)==3, "At least 3 clicks are required for paste different from source"
         if len(paths[2])>10:
-            region_paste = utils.points_within_lasso(paths[2], border = (height, width))
+            region_output = utils.points_within_lasso(paths[2], border = (height, width))
+            region_paste = region_output
         else :
             barycenter = np.rint(paths[0].mean(axis=0)).astype(int)
             offset = clicks[2]-barycenter
@@ -149,7 +152,7 @@ def run(params):
             region_paste = utils.points_within_lasso(paths[0]+offset, border = (height, width))
             print(region_paste)
         
-    pixels = image[region_paste[:, 0], region_paste[:, 1],:]
+    pixels = image[region_output[:, 0], region_output[:, 1],:]
     pixels = pixels.astype(np.float32) / 255.0
     new_pixels = state_to_pixels(pixels, output_measures)
     image[region_paste[:, 0], region_paste[:, 1],:] = (new_pixels * 255).astype(np.uint8)
