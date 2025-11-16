@@ -8,7 +8,7 @@ spec = importlib.util.spec_from_file_location("utils", "effect/utils.py")
 utils = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(utils)
 
-spec_steer = importlib.util.spec_from_file_location("steer", "effect/steerable/steer_training.py")
+spec_steer = importlib.util.spec_from_file_location("steer", "effect/steerable/helper.py")
 steer = importlib.util.module_from_spec(spec_steer)
 spec_steer.loader.exec_module(steer)
 
@@ -73,7 +73,7 @@ def create_circuit_and_measure(params, source, target, initial, n_qubits):
     n_steps = params["user_input"]["timesteps"]
     dev = qml.device("default.qubit", wires=n_qubits)
     circuit = steer.build_circuit(dev, params["user_input"], source, target, n_qubits)
-    output = circuit(initial, n_qubits, t, n_steps=n_steps, n=1)
+    output = circuit(initial_state=initial, n_qubits=n_qubits, t=t, n_steps=n_steps, n=1)
     return output
 
 """

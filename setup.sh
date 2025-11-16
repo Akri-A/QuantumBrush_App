@@ -324,8 +324,8 @@ setup_python_environment() {
         "pytest>=7.0.0" \
         "black>=23.0.0" \
         "matplotlib>=3.10.0" \
-        "jax>=0.8.0,<0.9.0" \
-        "jaxlib>=0.8.0,<0.9.0" \
+        "jax~=0.6.0" \
+        "jaxlib~=0.6.0" \
         "pennylane>=0.43.0,<0.44.0" \
         "optax>=0.1.0,<0.2.0" \
         "equinox"
