@@ -24,10 +24,6 @@
             "min": 0.735,
             "max": 2.5,
             "default": 0.735 
-        },
-        "Molecule": {
-            "type": "str",
-            "default": "H2" 
         }
     },
     "stroke_input": {

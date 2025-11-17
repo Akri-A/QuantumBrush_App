@@ -64,7 +64,7 @@ def chemistry(initial_angles : list, circuit : QuantumCircuit, params_to_apply :
     z_expectations = np.zeros(num_angles * num_circuits)
     for index_subcircuit in range(num_circuits):
         qc = QuantumCircuit(num_qubits+1) 
-        qc.x(num_qubits)
+        # qc.x(num_qubits)
         start_index =  index_subcircuit * num_qubits
         end_index = start_index + num_qubits
         # Prepare each qubit in the state defined by (theta, phi)
@@ -117,8 +117,7 @@ def run(params):
     width = image.shape[1]
 
     # Extract user-defined parameters
-    molecule = params["user_input"]["Molecule"]
-    assert molecule == "H2", "Currently only H2 molecule is supported"
+    molecule = "H2"
     with open('effect/chemical/data/' + molecule.lower() + '_parameters.json', "r") as f:
         circuit_params = json.load(f)
     with open('effect/chemical/data/' + molecule.lower() + '_circuit.qpy', "rb") as f:
@@ -135,6 +134,7 @@ def run(params):
    
     # Extract stroke parameters
     path = params["stroke_input"]["path"]
+    
     path_length = len(path)
 
     # Split path to have the same number of pixels as circuits available
@@ -149,7 +149,7 @@ def run(params):
     pixels = []
     for lines in split_paths:
 
-        region = utils.points_within_radius(lines, radius, border = (height, width))
+        region, distance = utils.points_within_radius(lines, radius, border = (height, width), return_distance=True)
 
         selection = image[region[:, 0], region[:, 1]]
         selection = selection.astype(np.float32) / 255.0
@@ -159,11 +159,15 @@ def run(params):
         theta = np.pi * np.mean(selection_hls[..., 1], axis=0)
     
         initial_angles.append((phi,theta))
-        pixels.append((region, selection_hls))
+        pixels.append((region, distance, selection_hls))
     
     final_angles =  chemistry(initial_angles, circuit, params_to_apply)
 
-    for i,(region,selection_hls) in enumerate(pixels):
+    # accumulate RGB and alpha per region
+    H, W, _ = image.shape
+    stroke_rgb_acc = np.zeros((H, W, 3), dtype=np.float32)
+    stroke_alpha_acc = np.zeros((H, W), dtype=np.float32)
+    for i, (region, distance, selection_hls) in enumerate(pixels):
         new_phi, new_theta = final_angles[i]
         old_phi, old_theta = initial_angles[i]
 
@@ -171,13 +175,26 @@ def run(params):
         offset_l = (new_theta - old_theta) / np.pi
 
         selection_hls[...,0] = (selection_hls[...,0] + offset_h) % 1
-        selection_hls[...,1] += offset_l
-    
-        selection_hls = np.clip(selection_hls, 0, 1)
-        selection_rgb = utils.hls_to_rgb(selection_hls)
-        selection_rgb = (selection_rgb * 254).astype(np.uint8)
+        selection_hls[...,1] = np.clip(selection_hls[...,1] + offset_l, 0, 1)
 
-        image[region[:, 0], region[:, 1]] = selection_rgb
+        selection_rgb = utils.hls_to_rgb(selection_hls)  # float32 in [0,1]
         
-        
+        # accumulate RGB weighted by distance (alpha)
+        weight = np.exp(-distance*distance/1.4)  # Gaussian falloff based on distance [0,1]
+        # weight = np.clip(weight, 0, 3.0) # cap maximum weight to avoid extreme values
+        stroke_rgb_acc[region[:,0], region[:,1]] += selection_rgb[..., :3] * weight[..., None]
+        stroke_alpha_acc[region[:,0], region[:,1]] += weight
+    
+    # compute final RGB by dividing accumulated RGB by accumulated alpha
+    stroke_rgb = np.zeros_like(stroke_rgb_acc)
+    mask = stroke_alpha_acc > 0
+    stroke_rgb[mask] = stroke_rgb_acc[mask] / stroke_alpha_acc[mask, None]
+
+    # blend stroke over original image
+    image_float = image.astype(np.float32) / 255
+    mask_3 = mask[..., None]        # expand mask to (H, W, 1)
+    blended = (1 - mask_3) * image_float[...,:3] + mask_3 * stroke_rgb
+
+    image[...,:3] = np.clip(blended * 255, 0, 255).astype(np.uint8)
+
     return image
