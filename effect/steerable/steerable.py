@@ -26,11 +26,15 @@ def selection_to_state(image, region, nb_controls):
 
     state = Vt.flatten() # 16 entries
     if nb_controls == 3:
-        log_s_normalized = log_s / np.linalg.norm(log_s)
-        state_normalized = state[:4] / np.linalg.norm(state[:4])
-        return U, S, Vt, np.concatenate([0.5*log_s_normalized , 0.5*state_normalized])
+        log_s2 = np.concatenate([log_s, log_s])
+        # state_normalized = state[::5] / np.linalg.norm(state[::5])
+        return U, S, Vt, log_s2/np.linalg.norm(log_s2)
     elif nb_controls == 4:
-        return U, S, Vt, state / np.linalg.norm(state)
+        # return U, S, Vt, state / np.linalg.norm(state)
+        # log_s_normalized = log_s / np.linalg.norm(log_s)
+        log_s4 = np.concatenate([log_s, log_s, log_s, log_s])
+        return U, S, Vt, log_s4/np.linalg.norm(log_s4)
+
     else :
         raise ValueError(f"Unsupported number of controls: {nb_controls}")
 
@@ -50,15 +54,25 @@ def state_to_pixels(U, S, Vt, state):
         exponent = np.clip(norm_log_s * state, -700, 700) # to avoid overflow
         S_new = np.diag(np.exp(exponent))
     elif nb==8 :
-        exponent = np.clip(2*norm_log_s*state[:4], -700, 700) # to avoid overflow
+        #exponent = np.clip(2*norm_log_s*state[:4], -700, 700) # to avoid overflow
+        #S_new = np.diag(np.exp(exponent))
+        #Vt_new = Vt.copy()
+        #vt_norm =np.linalg.norm(np.diag(Vt_new))
+        #vt_modified =  2*vt_norm * state[4:]
+        #Vt_new[0, 0] = vt_modified[0] 
+        #Vt_new[1, 1] = vt_modified[1] 
+        #Vt_new[2, 2] = vt_modified[2] 
+        #Vt_new[3, 3] = vt_modified[3] 
+        state_new = (state[:4] + state[4:])
+        exponent = np.clip(norm_log_s * state_new/np.linalg.norm(state_new), -700, 700) # to avoid overflow
         S_new = np.diag(np.exp(exponent))
-        vt = Vt.flatten() 
-        vt_norm = np.linalg.norm(vt[:4])
-        vt_modified =  2*vt_norm * state[4:]
-        Vt_new = np.concatenate([vt_modified, vt[4:]]).reshape(Vt.shape)
     elif nb==16:
-        vt_norm = np.linalg.norm(Vt)
-        Vt_new = (vt_norm * state).reshape(Vt.shape)
+        # vt_norm = np.linalg.norm(Vt)
+        # Vt_new = (vt_norm * state).reshape(Vt.shape)
+        state_new = (state[:8] + state[8:])
+        state_new = (state_new[:4] + state_new[4:])
+        exponent = np.clip(norm_log_s * state_new/np.linalg.norm(state_new), -700, 700) # to avoid overflow
+        S_new = np.diag(np.exp(exponent))
     else :
         raise ValueError(f"Unsupported number of param in state : {nb}")
     print(f"========== Output ==============\n U=\n{U},\n S=\n{S_new},\n Vt=\n{Vt_new}")
