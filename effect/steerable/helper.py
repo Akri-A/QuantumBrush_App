@@ -2,9 +2,9 @@
 Author: Chih-Kang Huang && chih-kang.huang@hotmail.com
 Date: 2025-11-13 08:14:18
 LastEditors: Chih-Kang Huang && chih-kang.huang@hotmail.com
-LastEditTime: 2025-11-16 20:08:24
+LastEditTime: 2025-11-17 00:46:59
 FilePath: /effect/steerable/helper.py
-Description: 
+Description: helper functions for steerable brush
 
 '''
 import jax
@@ -20,15 +20,40 @@ import matplotlib.pyplot as plt
 
 ### Auxilary functions (Fidelity, Hamiltonian builder)
 def density_matrix(psi):
-    """Convert a state vector to a density matrix."""
+    """
+    Convert a state vector to a density matrix
+
+    Return:
+        jnp.array
+    """
     return jnp.outer(psi, jnp.conjugate(psi))
 
 def quantum_fidelity(psi, rho):
+    """
+    Quantum fidelity between two quantum states psi and rho. 
+
+    Return:
+        jnp.array
+    """
     psi = psi/jnp.linalg.norm(psi)
     rho = rho /jnp.linalg.norm(rho)
     return jnp.abs(jnp.vdot(psi, rho))**2
 
 def build_hamiltonians(n_qubits): 
+    """
+    Construct a set of Hamiltonians for a chain of `n_qubits`.
+
+    The base Hamiltonian is
+        H₀ = Σ (Xₖ Xₖ₊₁ + Yₖ Yₖ₊₁ + Zₖ Zₖ₊₁).
+
+    Additional single-qubit Hamiltonians are defined cyclically:
+        Hₖ = Xₖ if k ≡ 1 (mod 3)
+           = Yₖ if k ≡ 2 (mod 3)
+           = Zₖ if k ≡ 0 (mod 3).
+
+    Returns:
+        list: A list of `qml.Hamiltonian` objects.
+    """
     H0 = sum(qml.PauliX(i) @ qml.PauliX(i+1) for i in range(n_qubits-1))   
     H0 += sum(qml.PauliY(i) @ qml.PauliY(i+1) for i in range(n_qubits-1))  
     H0 += sum(qml.PauliZ(i) @ qml.PauliZ(i+1) for i in range(n_qubits-1))
@@ -75,13 +100,19 @@ def splitting_circuit(model, initial_state, t,
                       n_qubits,
                       n=1
     ):
-    """ 
-    model: control NN
-    initial_state: Initial Quantum State
-    t: final time
-    n_steps: time steps
-    H_list : Hamiltanians
-    n: trotterizaiton order
+    """
+    Build and execute a Trotterized time-evolution circuit.
+
+    Args:
+        model: Neural-network control model providing time-dependent coefficients.
+        initial_state: The initial quantum state to prepare.
+        t (float): Final evolution time.
+        n_steps (int): Number of discrete time steps.
+        H_list (list): List of Hamiltonians used in the evolution.
+        n (int): Trotterization order (default: 1).
+
+    Returns:
+        array: The quantum state at time t.
     """
     dt = t / n_steps
     H0 = H_list[0]
@@ -139,7 +170,7 @@ def build_circuit(backend, params, source, target, n_qubits):
     opt_state = optimizer.init(eqx.filter(model, eqx.is_array))
 
     # Build circuit for training
-    dev = qml.device("default.qubit", interface='jax', wires=n_qubits)
+    dev = qml.device("default.qubit", wires=n_qubits)
     circuit = eqx.filter_jit(qml.qnode(dev)(partial(splitting_circuit, H_list=H_list, n_qubits=n_qubits)))
     ### Loss function and NN training 
     def loss_fn(model, inital_state, target_state, T=1.0, n_steps=30, C=1e-5):

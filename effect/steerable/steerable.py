@@ -1,7 +1,5 @@
 import numpy as np
 import importlib.util
-import jax
-import jax.numpy as jnp
 import pennylane as qml
 
 spec = importlib.util.spec_from_file_location("utils", "effect/utils.py")
@@ -30,7 +28,7 @@ def selection_to_state(image, region, nb_controls):
     if nb_controls == 3:
         log_s_normalized = log_s / np.linalg.norm(log_s)
         state_normalized = state[:4] / np.linalg.norm(state[:4])
-        return U, S, Vt, jnp.concatenate([0.5*log_s_normalized , 0.5*state_normalized])
+        return U, S, Vt, np.concatenate([0.5*log_s_normalized , 0.5*state_normalized])
     elif nb_controls == 4:
         return U, S, Vt, state / np.linalg.norm(state)
     else :
@@ -41,6 +39,7 @@ def state_to_pixels(U, S, Vt, state):
     template : selection of pixels from an image
     state : output state from circuit
     """
+    state = np.array(state)
     nb = len(state)
     S_new = np.copy(np.diag(S))
     Vt_new = np.copy(Vt)
