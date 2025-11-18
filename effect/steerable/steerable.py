@@ -52,17 +52,36 @@ def state_to_pixels(U, S, Vt, state):
     S_safe = np.clip(S, 1e-30, None)  # Avoid log(0) or negative
     log_s = np.log(S_safe)
     norm_log_s = np.linalg.norm(log_s)
+    # helper function to construct block diagonaled matrices
+    def block_diag_np(*mats):
+        # Determine total size
+        sizes = [m.shape[0] for m in mats]
+        total = sum(sizes)
+
+        # Allocate zero matrix
+        out = np.zeros((total, total), dtype=mats[0].dtype)
+
+        # Fill blocks
+        offset = 0
+        for m in mats:
+            n = m.shape[0]
+            out[offset:offset+n, offset:offset+n] = m
+            offset += n
+
+        return out
     if nb==4:
         exponent = np.clip(norm_log_s * state, -700, 700) # to avoid overflow
         S_new = np.diag(np.exp(exponent))
     elif nb==8 :
-        op = np.eye(8)
-        op[4:, 4:] = Vt_new
+        op = block_diag_np(np.eye(4), Vt_new)
         state_new = (np.linalg.inv(op) @ state)[:4]
         exponent = np.clip(norm_log_s * state_new/np.linalg.norm(state_new), -700, 700) # to avoid overflow
         S_new = np.diag(np.exp(exponent))
     elif nb==16:
         ### First method
+        op = block_diag_np(np.eye(4), Vt_new, Vt_new @ Vt_new, Vt_new @ Vt_new @ Vt_new)
+        state_new = (np.linalg.inv(op) @ state)[:4]
+        ### Second method
         # def best_self_outer_complex(M):
         #     H = 0.5 * (M + M.conj().T)   # Hermitian part
         #     lam, U = np.linalg.eigh(H)   # real eigenvalues
@@ -74,25 +93,6 @@ def state_to_pixels(U, S, Vt, state):
         #     res_norm = np.linalg.norm(M - A, ord='fro')
         #     return a, A, res_norm 
         # state_new, _, _ = best_self_outer_complex(state.reshape(4, 4))
-        ### Second method
-        def block_diag_np(*mats):
-            # Determine total size
-            sizes = [m.shape[0] for m in mats]
-            total = sum(sizes)
-
-            # Allocate zero matrix
-            out = np.zeros((total, total), dtype=mats[0].dtype)
-
-            # Fill blocks
-            offset = 0
-            for m in mats:
-                n = m.shape[0]
-                out[offset:offset+n, offset:offset+n] = m
-                offset += n
-
-            return out
-        op = block_diag_np(np.eye(4), Vt_new, Vt_new @ Vt_new, Vt_new @ Vt_new @ Vt_new)
-        state_new = (np.linalg.inv(op) @ state)[:4]
 
         exponent = np.clip(norm_log_s * state_new/np.linalg.norm(state_new), -700, 700) # to avoid overflow
         S_new = np.diag(np.exp(exponent))
