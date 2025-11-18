@@ -26,13 +26,15 @@ def selection_to_state(image, region, nb_controls):
 
     state = Vt.flatten() # 16 entries
     if nb_controls == 3:
-        log_s2 = np.concatenate([log_s, log_s])
+        #log_s2 = np.concatenate([log_s, log_s[::-1]])
+        log_s2 = np.repeat(log_s, 2)
         # state_normalized = state[::5] / np.linalg.norm(state[::5])
         return U, S, Vt, log_s2/np.linalg.norm(log_s2)
     elif nb_controls == 4:
         # return U, S, Vt, state / np.linalg.norm(state)
         # log_s_normalized = log_s / np.linalg.norm(log_s)
-        log_s4 = np.concatenate([log_s, log_s, log_s, log_s])
+        #log_s4 = np.concatenate([log_s, log_s[::-1], log_s[::-1], log_s])
+        log_s4 = (np.kron(log_s.reshape(-1, 1), log_s.reshape(-1,1).T)).flatten()
         return U, S, Vt, log_s4/np.linalg.norm(log_s4)
 
     else :
@@ -67,10 +69,20 @@ def state_to_pixels(U, S, Vt, state):
         exponent = np.clip(norm_log_s * state_new/np.linalg.norm(state_new), -700, 700) # to avoid overflow
         S_new = np.diag(np.exp(exponent))
     elif nb==16:
-        # vt_norm = np.linalg.norm(Vt)
-        # Vt_new = (vt_norm * state).reshape(Vt.shape)
-        state_new = (state[:8] + state[8:])
-        state_new = (state_new[:4] + state_new[4:])
+        #vt_norm = np.linalg.norm(Vt)
+        #Vt_new = (vt_norm * state).reshape(Vt.shape)
+        def best_self_outer_complex(M):
+            H = 0.5 * (M + M.conj().T)   # Hermitian part
+            lam, U = np.linalg.eigh(H)   # real eigenvalues
+            lambda1 = lam[-1]
+            u1 = U[:, -1]
+            alpha = np.sqrt(max(lambda1, 0.0))
+            a = alpha * u1
+            A = np.outer(a, a.conj())    # a a^H
+            res_norm = np.linalg.norm(M - A, ord='fro')
+            return a 
+
+        state_new = best_self_outer_complex(state.reshape(4, 4))
         exponent = np.clip(norm_log_s * state_new/np.linalg.norm(state_new), -700, 700) # to avoid overflow
         S_new = np.diag(np.exp(exponent))
     else :
