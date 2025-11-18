@@ -1,3 +1,16 @@
+"""
+Steerable Brush Effect Module.
+
+This module implements the `Steerable` brush effect used in the Java application. 
+It applies geometric control theory to translate colors from one canvas to another.
+Neural networks are used to estimate a smooth trajectory from a source state to 
+a target state. By adjusting the trajectory parameters, the user can control 
+the color transformation process.
+
+Authors:
+    Jui-Ting Lu & Chih-Kang Huang
+"""
+
 import numpy as np
 import importlib.util
 import pennylane as qml
@@ -14,6 +27,29 @@ spec_steer.loader.exec_module(steer)
 Utility functions for colors
 """
 def selection_to_state(image, region, nb_controls):
+    """
+    Compute a (normalized) state vector from a selected region of an image.
+
+    This function extracts RGBA pixel values from the specified region of an image,
+    performs Singular Value Decomposition (SVD), and constructs a normalized feature 
+    vector (the "state") depending on the requested number of controls. 
+
+    Args:
+        image (np.ndarray): The input image as a NumPy array of shape (H, W, 4).
+        region (np.ndarray): A NumPy array of shape (N, 2) where each row is
+            (row_index, column_index), specifying which pixels to include.
+        nb_controls (int): Number of controls to compute. Supported values:
+            - 2: Returns normalized log singular values.
+            - 3: Returns log singular values concatenated with Vt @ log_s.
+            - 4: Returns log_s concatenated with (Vt^k @ log_s) for k = 1, 2, 3.
+
+    Returns:
+        tuple:
+            - U (np.ndarray): Left singular vectors from SVD.
+            - S (np.ndarray): Singular values from SVD.
+            - Vt (np.ndarray): Right singular vectors from SVD.
+            - state (np.ndarray): Normalized feature vector depending on `nb_controls`.
+    """
     pixels = image[region[:, 0], region[:, 1]] # RGBA 
     print(f"initial pixels {pixels}")
     pixels = pixels.astype(np.float32) / 255.0
@@ -42,8 +78,35 @@ def selection_to_state(image, region, nb_controls):
 
 def state_to_pixels(U, S, Vt, state):
     """
-    template : selection of pixels from an image
-    state : output state from circuit
+    Reconstructs a pixel matrix from SVD components and a state vector.
+
+    This function inverts the feature-extraction process used in `selection_to_state`.
+    It reconstructs a modified pixel matrix by regenerating a new diagonal `S_new` from the state vector.
+
+    The dimensionality of `state` determines how the new singular values are
+    computed:
+        - 4 entries: direct exponentiation of scaled log singular values.
+        - 8 entries: undo one Vt-based mixing block.
+        - 16 entries: undo three successive Vt-mixing blocks (Vt, Vt², Vt³).
+
+    Args:
+        U (np.ndarray):
+            Left singular vectors from initial SVD. Shape: (N, 4).
+        S (np.ndarray):
+            Singular values from initial SVD. Shape: (4,) or (4, 4).
+        Vt (np.ndarray):
+            Right singular vectors from initial SVD. Shape: (4, 4).
+        state (array-like):
+            Control state vector produced by the quantum circuit.
+            Length must be 4, 8, or 16 depending on the number of controls.
+
+    Returns:
+        np.ndarray:
+            The reconstructed pixel matrix, computed as:
+
+                U @ S_new @ Vt
+
+            where `S_new` is a new diagonal matrix constructed from the control state.
     """
     state = np.array(state)
     nb = len(state)
@@ -105,12 +168,39 @@ def state_to_pixels(U, S, Vt, state):
 Measurement
 """
 def create_circuit_and_measure(params, source, target, initial, n_qubits):
+    """
+    Build and execute a steering quantum circuit, then return its measured output.
+
+    This function creates a PennyLane device, constructs a steering circuit using
+    the parameters provided in `params["user_input"]`, and executes the circuit
+    on a given initial state. It returns the resulting state vector, which represents 
+    the output of the steering circuit.
+
+    Args:
+        params (dict):
+            A dictionary containing user parameters.
+        source (array-like):
+            Source state vector used as an input to the steering circuit.
+        target (array-like):
+            Target state vector toward which the steering circuit is designed
+            to evolve the system.
+        initial (array-like):
+            Initial state vector provided to the circuit during execution.
+        n_qubits (int):
+            Number of qubits allocated for the PennyLane device and the quantum
+            circuit.
+
+    Returns:
+        Array-like:
+            The output of the steering circuit after execution, a state vector.
+    """
     t = params["user_input"]["t"]
     n_steps = params["user_input"]["timesteps"]
     dev = qml.device("default.qubit", wires=n_qubits)
     circuit = steer.build_circuit(dev, params["user_input"], source, target, n_qubits)
     output = circuit(initial_state=initial, n_qubits=n_qubits, t=t, n_steps=n_steps, n=1)
     return output
+
 
 """
 Brush execution 
@@ -139,7 +229,6 @@ def run(params):
     print(f"There are {len(clicks)} clicks.")
     print(clicks)
     assert len(clicks) <= 3, "The number of clicks must be 3, i.e. source, target, paste"
-    
     
     # Extract the lasso path
     path = params["stroke_input"]["path"]
