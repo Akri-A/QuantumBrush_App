@@ -24,10 +24,10 @@ However, Luckily, the installer provides automatic OpenJDK + Python installation
 Quantum Brush is basically a graphics software powered by quantum-computing-imagination. There’s nothing which makes user experience difficult. The program has three windows. Treat them equally well.
 
 0. Import any Image! This is the guidance which are free images.
-   - [Free art website] (https://www.nga.gov/artworks/free-images-and-open-access)
-   - [Art canvas image 1] (https://unsplash.com/photos/a-white-wall-with-some-white-paint-on-it-YS0YJLU_h2k)
-   - [Art canvas image 2] (https://unsplash.com/photos/white-wall-paint-with-black-line-R53t-Tg6J4c)
-   - [Art canvas image 3] (https://unsplash.com/photos/white-printer-paper-on-white-surface-HZm2XR0whdw)
+   - [Free art website](https://www.nga.gov/artworks/free-images-and-open-access)
+   - [Art canvas image 1](https://unsplash.com/photos/a-white-wall-with-some-white-paint-on-it-YS0YJLU_h2k)
+   - [Art canvas image 2](https://unsplash.com/photos/white-wall-paint-with-black-line-R53t-Tg6J4c)
+   - [Art canvas image 3](https://unsplash.com/photos/white-printer-paper-on-white-surface-HZm2XR0whdw)
 
 1. Canvas
 
@@ -53,7 +53,7 @@ Quantum Brush is basically a graphics software powered by quantum-computing-imag
 
 	Open up Stroke Manager from *Tools* on the menu bar.
 
-![The image of Stoke Manager](/screenshots/manager.png)
+![The image of Stroke Manager](/screenshots/manager.png)
 
  Here, you can see the list of ’strokes’ that you created. You can change the timeline of them, for example, run the recent stroke on the simulator than the old one.
  
