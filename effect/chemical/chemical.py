@@ -1,3 +1,16 @@
+"""
+Chemical Brush Effect Module.
+
+The `Chemical` brush uses intermediate steps of the Variational Quantum 
+Eigensolver (VQE) algorithm from quantum chemistry to locally modify the 
+colors of a canvas. In this way, the brush encodes not only the physical 
+process related to the ground state of molecules but also the behavior of 
+the variational algorithm itself.
+
+Authors:
+    Jui-Ting Lu & Henrique Ennes
+"""
+
 import numpy as np
 from qiskit import qpy
 from qiskit import QuantumCircuit
@@ -13,8 +26,13 @@ spec.loader.exec_module(utils)
 def resize_list_repeat(values, new_length):
     """
     Resize a list by repeating or skipping elements uniformly.
-    - Expands the list by repeating elements.
-    - Reduces the list by evenly skipping elements.
+
+    Args:
+        values (list): Original list of elements to resize.
+        new_length (int): Desired length of the output list. Must be non-negative.
+
+    Returns:
+        list: A new list of length `new_length`.
     """
     
     if new_length <= 0:
@@ -64,7 +82,6 @@ def chemistry(initial_angles : list, circuit : QuantumCircuit, params_to_apply :
     z_expectations = np.zeros(num_angles * num_circuits)
     for index_subcircuit in range(num_circuits):
         qc = QuantumCircuit(num_qubits+1) 
-        # qc.x(num_qubits)
         start_index =  index_subcircuit * num_qubits
         end_index = start_index + num_qubits
         # Prepare each qubit in the state defined by (theta, phi)
