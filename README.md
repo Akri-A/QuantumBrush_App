@@ -106,7 +106,7 @@ You can see all debugging results if you open up the `View Live Debug Log` under
 
 1. `__init__.py` is just an empty file for existance.
 2. `{brushName}.py` is a brush algorithm file. Make your `run(...)` function to be linked to the `effects/apply_effect.py` in the future.
-3. `{brushName}.json` is a file contains initialised parameters for the brush. This is the example from `template.json`. It contains the default values for each parameter, data type of each and other metadata which is your name or a description. `id` is extra important because this will be used to communicate between each script.
+3. `{brushName}_requirements.json` is a file contains initialised parameters for the brush. This is the example from `template.json`. It contains the default values for each parameter, data type of each and other metadata which is your name or a description. `id` is extra important because this will be used to communicate between each script.
 
    ``` json
    {
