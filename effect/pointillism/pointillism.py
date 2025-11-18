@@ -23,6 +23,21 @@ try:
 
     sys.stderr.write("Utils loaded successfully!\n")
     sys.stderr.flush()
+
+    # --- Import Qiskit for Quantum Circuit Implementation ---
+    try:
+        from qiskit import QuantumCircuit, QuantumRegister
+        from qiskit.quantum_info import Statevector, SparsePauliOp
+        from qiskit_aer import AerSimulator
+        from qiskit.transpiler.preset_passmanagers import generate_preset_pass_manager
+        QISKIT_AVAILABLE = True
+        sys.stderr.write("Qiskit loaded successfully!\n")
+        sys.stderr.flush()
+    except ImportError as qiskit_err:
+        QISKIT_AVAILABLE = False
+        sys.stderr.write(f"WARNING: Qiskit not available ({qiskit_err}), will use classical fallback\n")
+        sys.stderr.flush()
+
 except Exception as e:
     sys.stderr.write(f"ERROR DURING IMPORT: {e}\n")
     sys.stderr.write(f"TRACEBACK: {str(e.__traceback__)}\n")
@@ -169,44 +184,34 @@ def run(params):
 
 def encode_color_to_qubit(color_rgb):
     """
-    [QUANTUM PLACEHOLDER]
     Convert RGB color to quantum state angles (phi, theta) on Bloch sphere.
 
-    This function should encode the color as a quantum state:
+    This function encodes the color as a quantum state:
         |psi> = cos(theta/2)|0> + e^(i*phi) sin(theta/2)|1>
 
-    Implementation guide:
-        1. Use utils.color_to_spherical(color_rgb) to get (phi, theta, saturation)
-        2. phi represents hue (0 to 2π)
-        3. theta represents lightness (0 to π)
-        4. Return (phi, theta) for quantum circuit initialization
+    Uses the QuantumBrush utility function to map color to spherical coordinates:
+        - phi represents hue (0 to 2π)
+        - theta represents lightness (0 to π)
+        - saturation is stored but not used for quantum encoding
 
     Args:
         color_rgb: np.ndarray [R, G, B] in range [0, 255]
 
     Returns:
         (phi, theta): Tuple of angles in radians
-
-    Example implementation:
-        phi, theta, saturation = utils.color_to_spherical(color_rgb)
-        return phi, theta
     """
-    # PLACEHOLDER: Return dummy values
-    # TODO: Implement using utils.color_to_spherical()
-    return (0.0, np.pi/2)
+    phi, theta, saturation = utils.color_to_spherical(color_rgb)
+    return phi, theta
 
 
 def spherical_to_rgb(phi, theta, saturation=0.5):
     """
-    [QUANTUM PLACEHOLDER]
     Convert quantum state angles back to RGB color.
     This is the inverse of encode_color_to_qubit().
 
-    Implementation guide:
-        1. Map phi to hue: hue = phi / (2π)
-        2. Map theta to lightness: lightness = theta / π
-        3. Use utils.hls_to_rgb([hue, lightness, saturation])
-        4. Scale to [0, 255] and return as uint8
+    Maps Bloch sphere coordinates to color:
+        - phi → hue (0 to 2π → 0 to 1)
+        - theta → lightness (0 to π → 0 to 1)
 
     Args:
         phi: Angle in [0, 2π] representing hue
@@ -215,51 +220,32 @@ def spherical_to_rgb(phi, theta, saturation=0.5):
 
     Returns:
         np.ndarray: RGB color [R, G, B] in range [0, 255]
-
-    Example implementation:
-        hue = phi / (2 * np.pi)
-        lightness = theta / np.pi
-        rgb_normalized = utils.hls_to_rgb(np.array([hue, lightness, saturation]))
-        rgb = (rgb_normalized * 255).astype(np.uint8)
-        return rgb
     """
-    # PLACEHOLDER: Return red color
-    # TODO: Implement using utils.hls_to_rgb()
-    return np.array([255, 0, 0], dtype=np.uint8)
+    # Convert angles to HLS color space
+    hue = phi / (2 * np.pi)
+    lightness = theta / np.pi
+
+    # Use QuantumBrush utility to convert HLS to RGB
+    rgb_normalized = utils.hls_to_rgb(np.array([hue, lightness, saturation]))
+
+    # Scale to [0, 255] range
+    rgb = (rgb_normalized * 255).astype(np.uint8)
+    return rgb
 
 
 def create_ising_pointillism_circuit(N_dots, original_colors, neighbors,
                                       coupling, evolution_time, target_color):
     """
-    [QUANTUM PLACEHOLDER]
     Create quantum circuit for N dots with Ising model interactions.
 
-    This is the core quantum algorithm implementing:
+    This implements the core quantum algorithm:
         Hamiltonian: H = -J Σ_(i,j neighbors) Z_i Z_j - h Σ_i X_i
 
-    Implementation guide:
-        1. Create QuantumCircuit with N_dots qubits
-        2. Initialize each qubit with its color:
-           for i, color in enumerate(original_colors):
-               phi, theta = encode_color_to_qubit(color)
-               qc.ry(theta, i)
-               qc.rz(phi, i)
-
-        3. Time evolution loop (Trotterization):
-           dt = 0.1  # Time step
-           steps = int(evolution_time / dt)
-           for step in range(steps):
-               # Apply ZZ interactions (Ising model)
-               for i, j in neighbors:
-                   qc.rzz(2 * coupling * dt, i, j)
-
-               # Apply external field toward target color
-               target_phi, target_theta = encode_color_to_qubit(target_color)
-               field_strength = 0.1
-               for i in range(N_dots):
-                   qc.rx(field_strength * dt * target_theta, i)
-
-        4. Return the circuit
+    The circuit uses:
+        1. Color-based qubit initialization (Bloch sphere encoding)
+        2. RZZ gates for Ising model interactions between neighbors
+        3. RX gates for external field toward target color
+        4. Trotterization for time evolution
 
     Args:
         N_dots: Number of dots (qubits)
@@ -272,65 +258,136 @@ def create_ising_pointillism_circuit(N_dots, original_colors, neighbors,
         target_color: RGB array for external field direction
 
     Returns:
-        QuantumCircuit with N_dots qubits (or None in placeholder mode)
-
-    Required imports:
-        from qiskit import QuantumCircuit
+        QuantumCircuit with N_dots qubits (or None if Qiskit unavailable)
     """
-    # PLACEHOLDER: Return None to signal classical fallback
-    # TODO: Implement Qiskit circuit as described above
-    print("  [PLACEHOLDER] Quantum circuit creation not yet implemented")
-    print(f"  Would create circuit with {N_dots} qubits, {len(neighbors)} interactions")
-    return None
+    # Check if Qiskit is available
+    if not QISKIT_AVAILABLE:
+        print("  [INFO] Qiskit not available, using classical fallback")
+        return None
+
+    # Handle edge cases
+    if N_dots == 0:
+        print("  [WARNING] No dots to create circuit for")
+        return None
+
+    try:
+        # Create quantum circuit with N_dots qubits
+        q = QuantumRegister(N_dots, 'q')
+        qc = QuantumCircuit(q)
+
+        # Step 1: Initialize each qubit with its original color
+        for i, color in enumerate(original_colors):
+            phi, theta = encode_color_to_qubit(color)
+            # Apply rotation gates to encode color
+            qc.ry(theta, i)
+            qc.rz(phi, i)
+
+        # Step 2: Time evolution using Trotterization
+        # Small time steps for more accurate evolution
+        dt = 0.1
+        steps = max(1, int(evolution_time / dt))
+
+        # Scale coupling strength (user input is [-1, 1], scale to appropriate range)
+        J = coupling * 0.7  # Similar to notebook's coupling constant
+
+        for step in range(steps):
+            # Apply ZZ interactions (Ising model) for all neighbor pairs
+            for i, j in neighbors:
+                # RZZ gate implements exp(-i * theta * Z_i Z_j / 2)
+                # For Ising model: theta = -2 * J * dt
+                theta_ij = -2 * J * dt
+                qc.rzz(theta_ij, i, j)
+
+            # Apply external field toward target color
+            # TODO (TEAMMATE): Replace this with per-qubit local color bias
+            # Current: Uniform bias toward target color
+            # Needed: Each qubit biased toward its original image color
+            target_phi, target_theta = encode_color_to_qubit(target_color)
+            field_strength = 0.1
+
+            for i in range(N_dots):
+                # RX gate creates bias toward target color
+                # TODO: Use original_colors[i] for local bias instead
+                qc.rx(field_strength * dt * target_theta, i)
+
+        print(f"  [QUANTUM] Created circuit: {N_dots} qubits, {len(neighbors)} interactions, {steps} Trotter steps")
+        return qc
+
+    except Exception as e:
+        print(f"  [ERROR] Quantum circuit creation failed: {e}")
+        return None
 
 
 def measure_all_qubits_to_colors(circuit, N_dots):
     """
-    [QUANTUM PLACEHOLDER]
-    Measure expectation values <X>, <Y>, <Z> for each qubit and decode to colors.
+    Measure quantum state and decode to colors.
 
-    Implementation guide:
-        1. For each qubit i, create Pauli observables:
-           observables = []
-           for i in range(N_dots):
-               for pauli in ['X', 'Y', 'Z']:
-                   op_string = 'I'*i + pauli + 'I'*(N_dots-i-1)
-                   observables.append(SparsePauliOp(op_string))
+    This function:
+        1. Extracts the statevector from the quantum circuit
+        2. Computes expectation values <X>, <Y>, <Z> for each qubit
+        3. Reconstructs Bloch sphere angles (phi, theta) from expectation values
+        4. Converts angles back to RGB colors
 
-        2. Run estimator to get expectation values:
-           exp_values = utils.run_estimator(circuit, observables)
-
-        3. Decode each qubit's Bloch vector to color:
-           colors = []
-           for i in range(N_dots):
-               exp_x = exp_values[3*i]
-               exp_y = exp_values[3*i + 1]
-               exp_z = exp_values[3*i + 2]
-
-               # Reconstruct angles from Bloch vector
-               phi = np.arctan2(exp_y, exp_x) % (2 * np.pi)
-               theta = np.arccos(np.clip(exp_z, -1, 1))
-
-               # Convert back to RGB
-               rgb = spherical_to_rgb(phi, theta)
-               colors.append(rgb)
-
-        4. Return array of colors
+    The Bloch vector components give:
+        <X> = sin(theta) * cos(phi)
+        <Y> = sin(theta) * sin(phi)
+        <Z> = cos(theta)
 
     Args:
         circuit: QuantumCircuit after time evolution
         N_dots: Number of qubits/dots
 
     Returns:
-        np.ndarray of RGB colors with shape (N_dots, 3)
-
-    Required imports:
-        from qiskit.quantum_info import SparsePauliOp
+        np.ndarray of RGB colors with shape (N_dots, 3), or None if measurement fails
     """
-    # PLACEHOLDER: Return None to signal classical fallback
-    # TODO: Implement measurement as described above
-    print("  [PLACEHOLDER] Quantum measurement not yet implemented")
-    return None
+    if not QISKIT_AVAILABLE:
+        print("  [INFO] Qiskit not available for measurement")
+        return None
+
+    try:
+        # Get the statevector from the circuit
+        statevector = Statevector(circuit)
+
+        colors = []
+
+        # For each qubit, compute expectation values and decode to color
+        for i in range(N_dots):
+            # Create Pauli observables for this qubit
+            # Format: I⊗I⊗...⊗X⊗I⊗...⊗I (X at position i)
+            pauli_x = 'I' * i + 'X' + 'I' * (N_dots - i - 1)
+            pauli_y = 'I' * i + 'Y' + 'I' * (N_dots - i - 1)
+            pauli_z = 'I' * i + 'Z' + 'I' * (N_dots - i - 1)
+
+            # Create SparsePauliOp observables
+            obs_x = SparsePauliOp(pauli_x)
+            obs_y = SparsePauliOp(pauli_y)
+            obs_z = SparsePauliOp(pauli_z)
+
+            # Compute expectation values
+            exp_x = statevector.expectation_value(obs_x).real
+            exp_y = statevector.expectation_value(obs_y).real
+            exp_z = statevector.expectation_value(obs_z).real
+
+            # Reconstruct angles from Bloch vector components
+            # phi (hue): angle in x-y plane
+            phi = np.arctan2(exp_y, exp_x) % (2 * np.pi)
+
+            # theta (lightness): angle from z-axis
+            # Clamp exp_z to [-1, 1] to avoid numerical errors in arccos
+            theta = np.arccos(np.clip(exp_z, -1.0, 1.0))
+
+            # Convert angles back to RGB color
+            rgb = spherical_to_rgb(phi, theta, saturation=0.6)
+            colors.append(rgb)
+
+        print(f"  [QUANTUM] Measured {N_dots} qubits and decoded to colors")
+        return np.array(colors)
+
+    except Exception as e:
+        print(f"  [ERROR] Quantum measurement failed: {e}")
+        import traceback
+        traceback.print_exc()
+        return None
 
 
 # ==================== CLASSICAL COLOR FUNCTIONS ====================
