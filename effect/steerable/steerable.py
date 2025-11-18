@@ -24,17 +24,17 @@ def selection_to_state(image, region, nb_controls):
     if nb_controls == 2:
         return U, S, Vt, log_s / np.linalg.norm(log_s)
 
-    state = Vt.flatten() # 16 entries
+    # state = Vt.flatten() # 16 entries
     if nb_controls == 3:
-        #log_s2 = np.concatenate([log_s, log_s[::-1]])
-        log_s2 = np.repeat(log_s, 2)
-        # state_normalized = state[::5] / np.linalg.norm(state[::5])
+        log_s2 =np.concatenate([log_s, Vt @ log_s])
+        
         return U, S, Vt, log_s2/np.linalg.norm(log_s2)
     elif nb_controls == 4:
         # return U, S, Vt, state / np.linalg.norm(state)
-        # log_s_normalized = log_s / np.linalg.norm(log_s)
-        #log_s4 = np.concatenate([log_s, log_s[::-1], log_s[::-1], log_s])
-        log_s4 = (np.kron(log_s.reshape(-1, 1), log_s.reshape(-1,1).T)).flatten()
+        ### First method
+        # log_s4 = (np.kron(log_s.reshape(-1, 1), log_s.reshape(-1,1).T)).flatten()
+        ### Second method
+        log_s4 = np.concatenate([log_s, Vt @ log_s, Vt @ Vt @ log_s, Vt @ Vt @ Vt @ log_s])
         return U, S, Vt, log_s4/np.linalg.norm(log_s4)
 
     else :
@@ -56,33 +56,44 @@ def state_to_pixels(U, S, Vt, state):
         exponent = np.clip(norm_log_s * state, -700, 700) # to avoid overflow
         S_new = np.diag(np.exp(exponent))
     elif nb==8 :
-        #exponent = np.clip(2*norm_log_s*state[:4], -700, 700) # to avoid overflow
-        #S_new = np.diag(np.exp(exponent))
-        #Vt_new = Vt.copy()
-        #vt_norm =np.linalg.norm(np.diag(Vt_new))
-        #vt_modified =  2*vt_norm * state[4:]
-        #Vt_new[0, 0] = vt_modified[0] 
-        #Vt_new[1, 1] = vt_modified[1] 
-        #Vt_new[2, 2] = vt_modified[2] 
-        #Vt_new[3, 3] = vt_modified[3] 
-        state_new = (state[:4] + state[4:])
+        op = np.eye(8)
+        op[4:, 4:] = Vt_new
+        state_new = (np.linalg.inv(op) @ state)[:4]
         exponent = np.clip(norm_log_s * state_new/np.linalg.norm(state_new), -700, 700) # to avoid overflow
         S_new = np.diag(np.exp(exponent))
     elif nb==16:
-        #vt_norm = np.linalg.norm(Vt)
-        #Vt_new = (vt_norm * state).reshape(Vt.shape)
-        def best_self_outer_complex(M):
-            H = 0.5 * (M + M.conj().T)   # Hermitian part
-            lam, U = np.linalg.eigh(H)   # real eigenvalues
-            lambda1 = lam[-1]
-            u1 = U[:, -1]
-            alpha = np.sqrt(max(lambda1, 0.0))
-            a = alpha * u1
-            A = np.outer(a, a.conj())    # a a^H
-            res_norm = np.linalg.norm(M - A, ord='fro')
-            return a 
+        ### First method
+        # def best_self_outer_complex(M):
+        #     H = 0.5 * (M + M.conj().T)   # Hermitian part
+        #     lam, U = np.linalg.eigh(H)   # real eigenvalues
+        #     lambda1 = lam[-1]
+        #     u1 = U[:, -1]
+        #     alpha = np.sqrt(max(lambda1, 0.0))
+        #     a = alpha * u1
+        #     A = np.outer(a, a.conj())    # a a^H
+        #     res_norm = np.linalg.norm(M - A, ord='fro')
+        #     return a, A, res_norm 
+        # state_new, _, _ = best_self_outer_complex(state.reshape(4, 4))
+        ### Second method
+        def block_diag_np(*mats):
+            # Determine total size
+            sizes = [m.shape[0] for m in mats]
+            total = sum(sizes)
 
-        state_new = best_self_outer_complex(state.reshape(4, 4))
+            # Allocate zero matrix
+            out = np.zeros((total, total), dtype=mats[0].dtype)
+
+            # Fill blocks
+            offset = 0
+            for m in mats:
+                n = m.shape[0]
+                out[offset:offset+n, offset:offset+n] = m
+                offset += n
+
+            return out
+        op = block_diag_np(np.eye(4), Vt_new, Vt_new @ Vt_new, Vt_new @ Vt_new @ Vt_new)
+        state_new = (np.linalg.inv(op) @ state)[:4]
+
         exponent = np.clip(norm_log_s * state_new/np.linalg.norm(state_new), -700, 700) # to avoid overflow
         S_new = np.diag(np.exp(exponent))
     else :
