@@ -3,8 +3,8 @@
     "id": "chemical",
     "author": "Luminists (Ali & Henrique & Jui-Ting)",
     "version": "1.0.0",
-    "long_description": "The brush uses the Variational Quantum Eigensolver (VQE) to simulate simple molecules (e.g., H2) and drives changes on the canvas based on the resulting quantum states.\nThis is achieved by applying a preprocessed family of VQE circuits to different pixels of the canvas. The resulting quantum states are then mapped to color values, creating a dynamic and interactive painting experience that reflects the underlying quantum chemistry simulations.\nBy adjusting parameters such as bond distance and basis set, users can explore the visual effects produced by the brush.\nAvailable parameters include:\n- Radius: controls the size of the brush\n- Bond Distance: sets the interatomic distance for the simulated molecule.\n",
-    "description": "Chemical uses the Variational Quantum Eigensolver (VQE) to drive changes on the underlying canvas.\n\nThe effect is controlled by several parameters:\n🔹 Radius → determines the size of the brush\n🔹 Bond Distance → determines the interatomic distance to simulate\n\nUsage:\n🔸 Click and drag on the canvas to apply the effect.",
+    "long_description": "The brush uses the Variational Quantum Eigensolver (VQE) to simulate simple molecules (e.g., H2) and drives changes on the canvas based on the resulting quantum states.\nThis is achieved by applying a preprocessed family of VQE circuits to different pixels of the canvas. The resulting quantum states are then mapped to color values, creating a dynamic and interactive painting experience that reflects the underlying quantum chemistry simulations.\nBy adjusting parameters such as bond distance and basis set, users can explore the visual effects produced by the brush.\nAvailable parameters include:\n- Radius: controls the size of the brush\n- Bond Distance: sets the interatomic distance for the simulated molecule.\n- Number of Repeats: Repetitions of each circuit before switching\n",
+    "description": "Chemical uses the Variational Quantum Eigensolver (VQE) to drive changes on the underlying canvas.\n\nThe effect is controlled by several parameters:\n🔹 Radius → determines the size of the brush\n🔹 Bond Distance → determines the interatomic distance to simulate\n🔹 Number of Repeats → how many times each circuit is applied before moving to the next one.\n\nUsage:\n🔸 Click and drag on the canvas to apply the effect.",
     "dependencies": {
         "numpy": ">=2.1.0",
         "colorsys": "",
@@ -24,6 +24,12 @@
             "min": 0.735,
             "max": 2.5,
             "default": 0.735 
+        },
+        "Number of Repeats": {
+            "type": "int",
+            "min": 1,
+            "max": 100,
+            "default": 1 
         }
     },
     "stroke_input": {

@@ -53,14 +53,13 @@ def resize_list_repeat(values, new_length):
     return [values[i] for i in idx]
 
 
-def chemistry(initial_angles : list, circuit : QuantumCircuit, params_to_apply : list):
+def chemistry(initial_angles, circuit, params_to_apply, num_repeat):
     """
     Run Chemical model simulation on quantum hardware simulator.
 
     Args:
         initial_angles (list): List of initial angles (phi, theta) for each drop
-        distance (str): Bond distance for the molecule.
-        circuit (QuantumCircuit): The quantum circuit in parametric form.
+        circuit: The quantum circuit in parametric form.
         params_to_apply (list): List of parameters to apply to the circuit.
         
 
@@ -68,13 +67,16 @@ def chemistry(initial_angles : list, circuit : QuantumCircuit, params_to_apply :
         Final angles after application of circuits.
     """
     num_angles = len(initial_angles)
-    print("initial angles",initial_angles)
+    print(f"{len(initial_angles)} initial angles: {initial_angles}")
 
     num_qubits = circuit.num_qubits 
     num_circuits = num_angles // num_qubits 
     leftover_qubits =  num_angles % num_qubits # number of leftover qubits
+    # repeat the parameters if user wants to apply each circuits on more than 1 times 
+    adjusted_params_to_apply = [x for x in params_to_apply for _ in range(num_repeat)]
     # adjust the number of parameters of subcircuits to match the expected number of subcircuits
-    adjusted_params_to_apply = resize_list_repeat(params_to_apply, num_circuits)
+    if num_angles > len(adjusted_params_to_apply):
+        adjusted_params_to_apply = resize_list_repeat(params_to_apply, num_circuits)
 
     # Use mutliple circuits to get the output angles
     x_expectations = np.zeros(num_qubits * num_circuits)
@@ -85,6 +87,7 @@ def chemistry(initial_angles : list, circuit : QuantumCircuit, params_to_apply :
         start_index =  index_subcircuit * num_qubits
         end_index = start_index + num_qubits
         # Prepare each qubit in the state defined by (theta, phi)
+        qc.x(num_qubits)
         for i, (phi, theta) in enumerate(initial_angles[leftover_qubits+start_index:leftover_qubits+end_index]):
             qc.ry(theta, i)
             qc.rz(phi, i)
@@ -98,9 +101,9 @@ def chemistry(initial_angles : list, circuit : QuantumCircuit, params_to_apply :
         ops = [SparsePauliOp(Pauli('I'*(num_qubits-i) + p + 'I'*i)) for p in ['X','Y','Z']  for i in range(num_qubits)]
         obs = utils.run_estimator(qc,ops)
         # Store the expectations
-        x_expectations[start_index:end_index] = obs[:num_qubits]
-        y_expectations[start_index:end_index] = obs[num_qubits:2*num_qubits]
-        z_expectations[start_index:end_index] = obs[2*num_qubits:]
+        x_expectations[start_index:end_index] = obs[:num_qubits].mean()
+        y_expectations[start_index:end_index] = obs[num_qubits:2*num_qubits].mean()
+        z_expectations[start_index:end_index] = obs[2*num_qubits:].mean()
 
     # phi = arctan2(Y, X)
     phi_expectations = [np.arctan2(y,x) % (2 * np.pi) for x, y in zip(x_expectations, y_expectations)]
@@ -148,6 +151,8 @@ def run(params):
     
     radius = params["user_input"]["Radius"]
     assert radius > 0, "Radius must be greater than 0"
+    num_repeat = params["user_input"]["Number of Repeats"]
+    assert num_repeat >= 1, "Number of Repeats must be at least 1"
    
     # Extract stroke parameters
     path = params["stroke_input"]["path"]
@@ -178,13 +183,10 @@ def run(params):
         initial_angles.append((phi,theta))
         pixels.append((region, distance, selection_hls))
     
-    final_angles =  chemistry(initial_angles, circuit, params_to_apply)
+    final_angles =  chemistry(initial_angles, circuit, params_to_apply, num_repeat)
+    print("final angles", final_angles)
 
-    # accumulate RGB and alpha per region
-    H, W, _ = image.shape
-    stroke_rgb_acc = np.zeros((H, W, 3), dtype=np.float32)
-    stroke_alpha_acc = np.zeros((H, W), dtype=np.float32)
-    for i, (region, distance, selection_hls) in enumerate(pixels):
+    for i,(region, distance, selection_hls) in enumerate(pixels):
         new_phi, new_theta = final_angles[i]
         old_phi, old_theta = initial_angles[i]
 
@@ -192,26 +194,13 @@ def run(params):
         offset_l = (new_theta - old_theta) / np.pi
 
         selection_hls[...,0] = (selection_hls[...,0] + offset_h) % 1
-        selection_hls[...,1] = np.clip(selection_hls[...,1] + offset_l, 0, 1)
+        selection_hls[...,1] += offset_l
 
-        selection_rgb = utils.hls_to_rgb(selection_hls)  # float32 in [0,1]
-        
-        # accumulate RGB weighted by distance (alpha)
-        weight = np.exp(-distance*distance/1.4)  # Gaussian falloff based on distance [0,1]
-        # weight = np.clip(weight, 0, 3.0) # cap maximum weight to avoid extreme values
-        stroke_rgb_acc[region[:,0], region[:,1]] += selection_rgb[..., :3] * weight[..., None]
-        stroke_alpha_acc[region[:,0], region[:,1]] += weight
-    
-    # compute final RGB by dividing accumulated RGB by accumulated alpha
-    stroke_rgb = np.zeros_like(stroke_rgb_acc)
-    mask = stroke_alpha_acc > 0
-    stroke_rgb[mask] = stroke_rgb_acc[mask] / stroke_alpha_acc[mask, None]
+        selection_hls = np.clip(selection_hls, 0, 1)
 
-    # blend stroke over original image
-    image_float = image.astype(np.float32) / 255
-    mask_3 = mask[..., None]        # expand mask to (H, W, 1)
-    blended = (1 - mask_3) * image_float[...,:3] + mask_3 * stroke_rgb
+        selection_rgb = utils.hls_to_rgb(selection_hls)
+        selection_rgb = (selection_rgb * 254).astype(np.uint8)
 
-    image[...,:3] = np.clip(blended * 255, 0, 255).astype(np.uint8)
+        image[region[:, 0], region[:, 1]] = selection_rgb
 
     return image
