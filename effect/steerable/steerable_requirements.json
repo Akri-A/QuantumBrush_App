@@ -41,6 +41,12 @@
         "show color": {
             "type": "color",
             "default": "#FF0000"
+        },
+        "show thickness": {
+            "type": "int",
+            "min": 1,
+            "max": 20,
+            "default": 5
         }
     },
     "stroke_input": {
