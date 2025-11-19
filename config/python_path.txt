@@ -1,5 +1,2 @@
-<<<<<<< HEAD
-/home/ckhuang/miniconda3/envs/quantumbrush/bin/python
-=======
 /Users/astrydpark/miniconda3/envs/quantumbrush/bin/python3.11
->>>>>>> chemical_brush
+
