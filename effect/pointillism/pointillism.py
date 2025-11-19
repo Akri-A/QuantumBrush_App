@@ -298,17 +298,15 @@ def create_ising_pointillism_circuit(N_dots, original_colors, neighbors,
                 theta_ij = -2 * J * dt
                 qc.rzz(theta_ij, i, j)
 
-            # Apply external field toward target color
-            # TODO (TEAMMATE): Replace this with per-qubit local color bias
-            # Current: Uniform bias toward target color
-            # Needed: Each qubit biased toward its original image color
-            target_phi, target_theta = encode_color_to_qubit(target_color)
+            # Apply per-qubit color bias (2D bias)
+            # Each qubit biased toward its OWN original color
+            # This implements the "2D bias" concept from teammate's code
             field_strength = 0.1
 
             for i in range(N_dots):
-                # RX gate creates bias toward target color
-                # TODO: Use original_colors[i] for local bias instead
-                qc.rx(field_strength * dt * target_theta, i)
+                # Bias each qubit toward its original color (not uniform target)
+                phi_i, theta_i = encode_color_to_qubit(original_colors[i])
+                qc.rx(field_strength * dt * theta_i, i)
 
         print(f"  [QUANTUM] Created circuit: {N_dots} qubits, {len(neighbors)} interactions, {steps} Trotter steps")
         return qc
