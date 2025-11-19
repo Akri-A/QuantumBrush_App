@@ -32,9 +32,9 @@ def selection_to_state(image, region, nb_controls):
     elif nb_controls == 4:
         # return U, S, Vt, state / np.linalg.norm(state)
         ### First method
-        # log_s4 = (np.kron(log_s.reshape(-1, 1), log_s.reshape(-1,1).T)).flatten()
-        ### Second method
         log_s4 = np.concatenate([log_s, Vt @ log_s, Vt @ Vt @ log_s, Vt @ Vt @ Vt @ log_s])
+        ### Second method
+        # log_s4 = (np.kron(log_s.reshape(-1, 1), log_s.reshape(-1,1).T)).flatten()
         return U, S, Vt, log_s4/np.linalg.norm(log_s4)
 
     else :
