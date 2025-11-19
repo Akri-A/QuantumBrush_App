@@ -291,14 +291,15 @@ def run(params):
 
     # Optional: show source and target regions
     if params["user_input"].get("show source & target", False):
+        radius = params["user_input"].get("show thickness", 5)
         # highlight source
-        outline = utils.points_within_radius(paths[0], radius=30, border = None, return_distance = False)
+        outline = utils.points_within_radius(paths[0], radius=radius, border = None, return_distance = False)
         outline_color = image[outline[:, 0], outline[:, 1]].astype(np.float32)/255
         outline_color[...,:3] = params["user_input"]["show color"] / 255 # Set RGB channels
         outline_color[...,3] = 1 # alpha in RGBA 
         image[outline[:, 0], outline[:, 1]] = utils.apply_patch_to_image(image[outline[:, 0], outline[:, 1]], outline_color)
         # highlight target
-        outline = utils.points_within_radius(paths[1], radius=30, border = None, return_distance = False)
+        outline = utils.points_within_radius(paths[1], radius=radius, border = None, return_distance = False)
         outline_color = image[outline[:, 0], outline[:, 1]].astype(np.float32)/255
         outline_color[...,:3] = params["user_input"]["show color"] / 255 # Set RGB channels
         outline_color[...,3] = 1 # alpha in RGBA 
