@@ -324,6 +324,11 @@ setup_python_environment() {
         "pytest>=7.0.0" \
         "black>=23.0.0" \
         "matplotlib>=3.10.0" \
+        "jax~=0.6.0" \
+        "jaxlib~=0.6.0" \
+        "pennylane>=0.43.0,<0.44.0" \
+        "optax>=0.1.0,<0.2.0" \
+        "equinox"
 
 
     # Get the Python path from the conda environment
@@ -394,6 +399,12 @@ main() {
     printf "  • Qiskit: $(conda run -n quantumbrush python -c 'import qiskit; print(qiskit.__version__)' 2>/dev/null || echo 'Not available')\n"
     printf "  • Qiskit_ibm_runtime: $(conda run -n quantumbrush python -c 'import qiskit_ibm_runtime; print(qiskit_ibm_runtime.__version__)' 2>/dev/null || echo 'Not available')\n"
     printf "  • Matplotlib: $(conda run -n quantumbrush python -c 'import matplotlib; print(matplotlib.__version__)' 2>/dev/null || echo 'Not available')\n"
+    printf "  • JAX: $(conda run -n quantumbrush python -c 'import jax; print(jax.__version__)' 2>/dev/null || echo 'Not available')\n"
+    printf "  • JAXLIB: $(conda run -n quantumbrush python -c 'import jaxlib; print(jaxlib.__version__)' 2>/dev/null || echo 'Not available')\n"
+    printf "  • PennyLane: $(conda run -n quantumbrush python -c 'import pennylane as qml; print(qml.__version__)' 2>/dev/null || echo 'Not available')\n"
+    printf "  • Optax: $(conda run -n quantumbrush python -c 'import optax; print(optax.__version__)' 2>/dev/null || echo 'Not available')\n"
+    printf "  • Equinox: $(conda run -n quantumbrush python -c 'import equinox as eqx; print(eqx.__version__)' 2>/dev/null || echo 'Not available')\n"
+
     echo
     printf "${BLUE}To run QuantumBrush:${NORMAL}\n"
     printf "  • Double-click the JAR file\n"
