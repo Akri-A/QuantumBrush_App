@@ -1,6 +1,7 @@
 # effect/quantum_pointillism/quantum_pointillism.py
 import sys
 # Write to file to prove execution
+'''
 with open("/app/QuantumBrush/pointillism_debug.txt", "w") as f:
     f.write("MODULE LOADED!\n")
 
@@ -8,21 +9,25 @@ sys.stderr.write("=" * 60 + "\n")
 sys.stderr.write("POINTILLISM MODULE LOADING...\n")
 sys.stderr.write("=" * 60 + "\n")
 sys.stderr.flush()
+'''
 
 try:
     import numpy as np
     import importlib.util
-    import os
+    '''
     sys.stderr.write("Imports successful, now loading utils...\n")
     sys.stderr.flush()
+    '''
 
     # --- Import QuantumBrush utilities ---
     spec = importlib.util.spec_from_file_location("utils", "effect/utils.py")
     utils = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(utils)
 
+    '''
     sys.stderr.write("Utils loaded successfully!\n")
     sys.stderr.flush()
+    '''
 
     # --- Import Qiskit for Quantum Circuit Implementation ---
     try:
@@ -31,17 +36,17 @@ try:
         from qiskit_aer import AerSimulator
         from qiskit.transpiler.preset_passmanagers import generate_preset_pass_manager
         QISKIT_AVAILABLE = True
-        sys.stderr.write("Qiskit loaded successfully!\n")
-        sys.stderr.flush()
+        # sys.stderr.write("Qiskit loaded successfully!\n")
+        # sys.stderr.flush()
     except ImportError as qiskit_err:
         QISKIT_AVAILABLE = False
-        sys.stderr.write(f"WARNING: Qiskit not available ({qiskit_err}), will use classical fallback\n")
-        sys.stderr.flush()
+        # sys.stderr.write(f"WARNING: Qiskit not available ({qiskit_err}), will use classical fallback\n")
+        # sys.stderr.flush()
 
 except Exception as e:
-    sys.stderr.write(f"ERROR DURING IMPORT: {e}\n")
-    sys.stderr.write(f"TRACEBACK: {str(e.__traceback__)}\n")
-    sys.stderr.flush()
+    # sys.stderr.write(f"ERROR DURING IMPORT: {e}\n")
+    # sys.stderr.write(f"TRACEBACK: {str(e.__traceback__)}\n")
+    # sys.stderr.flush()
     raise
 
 # Optional: Import our helper functions if you create them in separate files later
@@ -55,6 +60,7 @@ def run(params):
     Currently implements classical Poisson disk sampling for pointillism.
     The quantum Ising model logic will replace the color generation part later.
     """
+    '''
     with open("/app/QuantumBrush/run_trace.txt", "w") as f:
         f.write("run() called!\n")
 
@@ -64,7 +70,7 @@ def run(params):
     print("POINTILLISM SCRIPT STARTING!", flush=True)
     print("=" * 50, flush=True)
     print("Quantum Pointillism brush started.")
-
+    '''
     # --- 1. Extract Parameters and Inputs ---
     image = params["stroke_input"]["image_rgba"].copy().astype(np.float64) # Work with float for calculations
     path = params["stroke_input"]["path"] # Shape: (N, 2) where each row is [y, x]
@@ -101,6 +107,7 @@ def run(params):
     print(f"Using min_dist={min_dist:.1f}px for {dot_count} dots in {len(region)} region points")
     dot_positions = poisson_disk_sample_improved(region, dot_count, min_dist=min_dist)
 
+    '''
     with open("/app/QuantumBrush/dots_sampled.txt", "w") as f:
         f.write(f"Sampled {len(dot_positions)} dots from {len(region)} region points\n")
 
@@ -108,7 +115,7 @@ def run(params):
         with open("/app/QuantumBrush/error_no_dots.txt", "w") as f:
             f.write("ERROR: No dots!\n")
         return image.astype(np.uint8)
-
+    '''
     print(f"Sampled {len(dot_positions)} dot positions.")
 
     # --- 3. Compute Adaptive Dot Size ---
@@ -170,8 +177,10 @@ def run(params):
         color = colors[i]
         draw_circle(image, (y, x), adjusted_dot_size, color)
 
+    '''
     with open("/app/QuantumBrush/complete.txt", "w") as f:
         f.write(f"Drew {len(dot_positions)} dots, returning image\n")
+    '''
 
     print("Quantum Pointillism brush finished.")
     return image.astype(np.uint8) # Ensure output is uint8
