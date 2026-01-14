@@ -25,7 +25,7 @@ To make the source code as an executable Java project in Eclipse IDE, two main s
 
 After you download Eclipse IDE, underneath your `$HOME` folder, you can see there is a folder named `eclipse-workspace`. This is the easiest place to start but you can choose any directory as a workplace. In my case, I choose the easiest option, and made the folder called `Test` inside `eclipse-workspace`.
 
-![A screenshot of the workspace setting](./img/eclipse-workspace.png)
+![A screenshot of the workspace setting](./img/workplace-setting.png)
 
 After this, you will see the fresh window like this.
 
