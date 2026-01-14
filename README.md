@@ -19,7 +19,42 @@ To make the source code as an executable Java project in Eclipse IDE, two main s
 
 ### Step 1: Let's make these raw Java files recognisable as a Java project.
 
+After you download Eclipse IDE, underneath your `$HOME` folder, you can see there is a folder named `eclipse-workspace`. This is the easiest place to start but you can choose any directory as a workplace. In my case, I choose the easiest option, and made the folder called `Test` inside `eclipse-workspace`.
 
+![A screenshot of the workspace setting](./img/eclipse-workspace.png)
+
+After this, you will see the fresh window like this.
+
+![A screenshot of the IDE window](./img/fresh-window.png)
+
+Let's create a Java project. If you put a cursor on 'File', you can select the option.
+
+![A screenshot of the menu bar](./img/new-java-project.png)
+
+Set the project name as `QuantumBrush` (why not?), uncheck `Use default location` and choose `src` folder from the cloned repository. Uncheck `Create module-info.java file` too. Press `Finish`.
+
+![A screenshot to set up the new Java project](./img/create-a-java-project.png)
+
+![A screenshot of browsing popup](./img/browse-for-new-java-project.png)
+
+After that, you can see the Java project is created based on the source code. But there's an issue. You would witness that there are so many red warnings. It's because the project doesn't know where to reference to get Processing (Java) framework.
+
+### Step 2: Let's make Processing 4 recognisable as a reference.
+
+If you open up the Package Explorer, you can see underneath `QuantumBrush`, there's `default package`, and if you open it up, you can see the source code (`.java` codes).
+
+Oh, and don't forget to download Processing 4 from its [official website](https://processing.org/download).
+
+- Hard way: Now, browse through this path on the Finder window: `Applications/Processing/Contents/app/resources/core/library/core-4.4.1.jar`. To find the `Contents` on the Applications window, right-click the `Processing` icon, and select `Show Package Contents`.
+- Shortcut for you: You can actually reference the `lib` folder in the cloned repository, and copy the `core-4.4.1.jar` file from there.
+
+![A screenshot to navigate through the app contents](./img/show-package-contents.png)
+
+Press `cmd + c` to copy the core JAR file. After that, go back to Eclipse, `cmd + v` to paste the file on the `Package Explorer` window after click `QuantumBrush`.
+
+![A screenshot of a file tree](./img/filetree.png)
+
+Now, right-click the `core-4.4.1.jar` and select `Build Path` > `Add to Build Path`.
 
 ## Acknowledgement
 
