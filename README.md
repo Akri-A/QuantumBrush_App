@@ -25,7 +25,7 @@ To set up the devleopment environment easily, I recommend go to [the `dist` bran
 
 Select the file, save the changes, and you won't see any errors afterwards.
 
-## Build the project from scratch!
+## Build the project from scratch
 
 To make the source code as an executable Java project in Eclipse IDE, create a new Java project in your ideal location.
 
