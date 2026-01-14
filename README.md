@@ -1,6 +1,23 @@
 # Welcome to the source code of Quantum Brush!
 
+Writer: Astryd Park
+
 ## Technical Description
+
+Quantum Brush is a standalone Java application with `Processing (Java)` framework and `conda` environment's `Python 3.11+` as its backend. It's built with `OpenJDK`:
+
+``` bash
+(base) astrydpark@Astryds-MacBook-Pro ~ % java -version
+    openjdk version "21.0.7" 2025-04-15 LTS
+    OpenJDK Runtime Environment Temurin-21.0.7+6 (build 21.0.7+6-LTS)
+    OpenJDK 64-Bit Server VM Temurin-21.0.7+6 (build 21.0.7+6-LTS, mixed mode, sharing)
+```
+
+After clone this repository, you can edit the code and build an app from scratch to test your contribution. Using [`Eclipse IDE`](https://eclipseide.org/) is highly recommended. I used `2025-03` version.
+
+To make the source code as an executable Java project in Eclipse IDE, two main steps are required. One is adding Processing 4's core library, which is shipped with its license and the source code in this repository, to the project's build path. The other is import the source codes from `src` folder into the IDE. Since Eclipse IDE doesn't naturally recognise the collection of `.java` files as a Java project, you need to follow the instructions.
+
+### Step 1: Let's make these raw Java files recognisable as a Java project.
 
 
 
