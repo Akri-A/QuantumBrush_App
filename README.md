@@ -15,9 +15,34 @@ Quantum Brush is a standalone Java application with `Processing (Java)` framewor
 
 After clone this repository, you can edit the code and build an app from scratch to test your contribution. Using [`Eclipse IDE`](https://eclipseide.org/) is highly recommended. I used `2025-03` version.
 
+## Build the project from scratch
+To make the source code as an executable Java project in Eclipse IDE, create a new Java project in your ideal location.
+
+After you download Eclipse IDE, underneath your `$HOME` folder, you can see there is a folder named `eclipse-workspace`. This is the easiest place to start but you can choose any directory as a workplace. In my case, I choose the easiest option, and made the folder called `Test` inside `eclipse-workspace`.
+
+![A screenshot of the workspace setting](./img/workplace-setting.png)
+
+After that, you will see the fresh window like this.
+
+![A screenshot of the IDE window](./img/fresh-window.png)
+
+Let's create a Java project. If you put a cursor on 'File', you can select the option.
+
+![A screenshot of the menu bar](./img/new-java-project.png)
+
+Set the project name as `QuantumBrush` (why not?), **uncheck `Use default location`** and choose **the cloned repository path** from Browse. *Uncheck `Create module-info.java file` too*. Press `Finish`.
+
+![A screenshot to set up the new Java project](./img/create-a-java-project.png)
+
+![A screenshot of browsing popup](./img/browse-for-new-java-project.png)
+
+Press `src` on Package Explorer and press the green 'GO' button.
+
+![Done!](./img/done.png)
+
 <details>
 
-<summary> c.f. If you want to bring only `.java` files </summary>
+<summary> c.f. If you want to bring only .java files to some folder that you want to work on </summary>
 
 To make the source code as an executable Java project in Eclipse IDE, two main steps are required. One is adding Processing 4's core library, which is shipped with its license and the source code in this repository, to the project's build path. The other is import the source codes from `src` folder into the IDE. Since Eclipse IDE doesn't naturally recognise the collection of `.java` files as a Java project, you need to follow the instructions.
 
@@ -27,7 +52,7 @@ After you download Eclipse IDE, underneath your `$HOME` folder, you can see ther
 
 ![A screenshot of the workspace setting](./img/workplace-setting.png)
 
-After this, you will see the fresh window like this.
+After that, you will see the fresh window like this.
 
 ![A screenshot of the IDE window](./img/fresh-window.png)
 
