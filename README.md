@@ -56,6 +56,12 @@ Press `cmd + c` to copy the core JAR file. After that, go back to Eclipse, `cmd 
 
 Now, right-click the `core-4.4.1.jar` and select `Build Path` > `Add to Build Path`.
 
+And that's pretty much it! Now you can build the Java project.
+
+### One more thing...
+
+When you build the app you might see the error regarding Python configuration. It's fine, just go to the Python Configuration menu from the menu bar of Quantum Brush, select the Python file underneath your `conda` instllation path (most of the time, it's underneath `$HOME/miniconda3/envs/{yourEnvironment}/bin/python3.x`). Select the file, save the changes, and you won't see any errors afterwards.
+
 ## Acknowledgement
 
 This repository contains Processing 4's core library, which is licensed under the GNU Lesser General Public License version 2.1 ([LGPL-2.1](https://www.gnu.org/licenses/old-licenses/lgpl-2.1.en.html)).
