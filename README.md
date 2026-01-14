@@ -15,7 +15,17 @@ Quantum Brush is a standalone Java application with `Processing (Java)` framewor
 
 After clone this repository, you can edit the code and build an app from scratch to test your contribution. Using [`Eclipse IDE`](https://eclipseide.org/) is highly recommended. I used `2025-03` version.
 
-## Build the project from scratch
+## One more thing before setting up the IDE
+
+To set up the devleopment environment easily, I recommend go to [the `dist` branch](https://github.com/moth-quantum/QuantumBrush/tree/dist) of the repository and install the app on your system. Follow the instructions there! Then, the installer script will install `miniconda3` and the `conda` environment with all required Python libraries, including `openJDK`.
+
+After that and the instructions bellow, when you build the app for the first time, you might see the error regarding Python configuration. It's fine, just go to the `Tools` > `Python Configuration` menu on the menu bar of Quantum Brush. Select the Python file underneath your `conda` instllation path (most of the time, it's underneath `$HOME/miniconda3/envs/{yourEnvironment}/bin/python3.x`).
+
+![A screenshot for Python configuration](./img/python-config.png)
+
+Select the file, save the changes, and you won't see any errors afterwards.
+
+## Build the project from scratch!
 To make the source code as an executable Java project in Eclipse IDE, create a new Java project in your ideal location.
 
 After you download Eclipse IDE, underneath your `$HOME` folder, you can see there is a folder named `eclipse-workspace`. This is the easiest place to start but you can choose any directory as a workplace. In my case, I choose the easiest option, and made the folder called `Test` inside `eclipse-workspace`.
@@ -40,9 +50,13 @@ Press `src` on Package Explorer and press the green 'GO' button.
 
 ![Done!](./img/done.png)
 
+Finished!
+
+---
+
 <details>
 
-<summary> c.f. If you want to bring only .java files to some folder that you want to work on </summary>
+<summary> c.f. (For advanced users) For some reason, if you really, really want to bring only .java files to some folder that you want to work on... </summary>
 
 To make the source code as an executable Java project in Eclipse IDE, two main steps are required. One is adding Processing 4's core library, which is shipped with its license and the source code in this repository, to the project's build path. The other is import the source codes from `src` folder into the IDE. Since Eclipse IDE doesn't naturally recognise the collection of `.java` files as a Java project, you need to follow the instructions.
 
@@ -87,11 +101,9 @@ Now, right-click the `core-4.4.1.jar` and select `Build Path` > `Add to Build Pa
 
 And that's pretty much it! Now you can build the Java project.
 
-### One more thing...
-
-When you build the app you might see the error regarding Python configuration. It's fine, just go to the Python Configuration menu from the menu bar of Quantum Brush, select the Python file underneath your `conda` instllation path (most of the time, it's underneath `$HOME/miniconda3/envs/{yourEnvironment}/bin/python3.x`). Select the file, save the changes, and you won't see any errors afterwards.
-
 </details>
+
+---
 
 ## Acknowledgement
 
