@@ -17,7 +17,7 @@ After clone this repository, you can edit the code and build an app from scratch
 
 <details>
 
-<summary> If you want to bring only `.java` files </summary>
+<summary> c.f. If you want to bring only `.java` files </summary>
 
 To make the source code as an executable Java project in Eclipse IDE, two main steps are required. One is adding Processing 4's core library, which is shipped with its license and the source code in this repository, to the project's build path. The other is import the source codes from `src` folder into the IDE. Since Eclipse IDE doesn't naturally recognise the collection of `.java` files as a Java project, you need to follow the instructions.
 
