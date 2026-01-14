@@ -19,13 +19,14 @@ After clone this repository, you can edit the code and build an app from scratch
 
 To set up the devleopment environment easily, I recommend go to [the `dist` branch](https://github.com/moth-quantum/QuantumBrush/tree/dist) of the repository and install the app on your system. Follow the instructions there! Then, the installer script will install `miniconda3` and the `conda` environment with all required Python libraries, including `openJDK`.
 
-After that and the instructions bellow, when you build the app for the first time, you might see the error regarding Python configuration. It's fine, just go to the `Tools` > `Python Configuration` menu on the menu bar of Quantum Brush. Select the Python file underneath your `conda` instllation path (most of the time, it's underneath `$HOME/miniconda3/envs/{yourEnvironment}/bin/python3.x`).
+*c.f.* After that and the instructions bellow, when you build the app for the first time, you might see the error regarding Python configuration. It's fine, just go to the `Tools` > `Python Configuration` menu on the menu bar of Quantum Brush. Select the Python file underneath your `conda` instllation path (most of the time, it's underneath `$HOME/miniconda3/envs/{yourEnvironment}/bin/python3.x`).
 
 ![A screenshot for Python configuration](./img/python-config.png)
 
 Select the file, save the changes, and you won't see any errors afterwards.
 
 ## Build the project from scratch!
+
 To make the source code as an executable Java project in Eclipse IDE, create a new Java project in your ideal location.
 
 After you download Eclipse IDE, underneath your `$HOME` folder, you can see there is a folder named `eclipse-workspace`. This is the easiest place to start but you can choose any directory as a workplace. In my case, I choose the easiest option, and made the folder called `Test` inside `eclipse-workspace`.
