@@ -27,6 +27,7 @@ public class QuantumBrush extends PApplet {
     private PImage currentImage;
     private boolean isDrawing = false;
     private String projectId = null;
+    private boolean ignoreNextClick = false;
     
     // Zoom and Pan state
     private float zoomLevel = 1.0f;
@@ -130,6 +131,12 @@ public class QuantumBrush extends PApplet {
         PSurfaceAWT.SmoothCanvas smoothCanvas = (PSurfaceAWT.SmoothCanvas) ((PSurfaceAWT)surface).getNative();
         canvasFrame = (JFrame) smoothCanvas.getFrame();
         canvasFrame.setTitle("Quantum Brush - Canvas");
+        canvasFrame.addWindowFocusListener(new WindowAdapter() {
+            @Override
+            public void windowGainedFocus(WindowEvent e) {
+                ignoreNextClick = true;
+            }
+        });
         
         // Position the canvas frame on the right side of the screen
         Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
@@ -1075,6 +1082,10 @@ public class QuantumBrush extends PApplet {
     
     // Mouse event handling with coordinate transformation
     public void mousePressed() {
+        if (ignoreNextClick) {
+            ignoreNextClick = false;
+            return;
+        }
         if (currentImage == null) {
             return; // Don't allow drawing if no image is loaded
         }
