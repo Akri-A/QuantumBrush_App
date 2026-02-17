@@ -167,9 +167,13 @@ class Path {
             // Compare absolute magnitudes to decide horizontal or vertical
             if (Math.abs(deltaX) > Math.abs(deltaY)) {
                 // Horizontal line: Lock Y to the click point's Y
+                points.clear();
+                points.add(clickPoint);
                 points.add(new PVector(x, clickPoint.y));
             } else {
                 // Vertical line: Lock X to the click point's X
+                points.clear();
+                points.add(clickPoint);
                 points.add(new PVector(clickPoint.x, y));
             }
         } else {
